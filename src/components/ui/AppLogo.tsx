@@ -17,8 +17,8 @@ export function AppLogo({ size = 32, showText = true, textClassName, className }
       <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#5865f2"/>
-            <stop offset="100%" stopColor="#7c3aed"/>
+            <stop offset="0%" stopColor="#ef4444"/>
+            <stop offset="100%" stopColor="#b91c1c"/>
           </linearGradient>
         </defs>
         <rect width="48" height="48" rx="12" fill={`url(#${gradId})`}/>
@@ -28,7 +28,7 @@ export function AppLogo({ size = 32, showText = true, textClassName, className }
         />
         <polyline
           points="14,20 17,20 19,14 21,26 23,15 25,21 34,20"
-          stroke="#5865f2"
+          stroke="#ef4444"
           strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"

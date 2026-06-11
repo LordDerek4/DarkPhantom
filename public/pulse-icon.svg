@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#5865f2"/>
-      <stop offset="100%" stop-color="#7c3aed"/>
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
     </linearGradient>
   </defs>
   <rect width="48" height="48" rx="12" fill="url(#bg)"/>
   <path d="M13 9H35C37.2 9 39 10.8 39 13V27C39 29.2 37.2 31 35 31H21L13 40V31C10.8 31 9 29.2 9 27V13C9 10.8 10.8 9 13 9Z" fill="white"/>
-  <polyline points="14,20 17,20 19,14 21,26 23,15 25,21 34,20" stroke="#5865f2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <polyline points="14,20 17,20 19,14 21,26 23,15 25,21 34,20" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

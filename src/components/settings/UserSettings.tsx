@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { validateImageFile } from '@/services/storage.service'
 import { updateUserProfile, updateUserStatus } from '@/services/user.service'
+import { updatePresence } from '@/services/presence.service'
 import type { UserStatus } from '@/types'
 import toast from 'react-hot-toast'
 import { cn } from '@/utils/helpers'
@@ -125,7 +126,10 @@ export function UserSettings() {
   const handleStatusChange = async (status: UserStatus) => {
     if (!user) return
     try {
-      await updateUserStatus(user.uid, status)
+      await Promise.all([
+        updateUserStatus(user.uid, status),
+        updatePresence(user.uid, status),
+      ])
       toast.success('Status updated')
     } catch {
       toast.error('Failed to update status')

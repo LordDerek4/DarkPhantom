@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth'
-import { doc, onSnapshot } from 'firebase/firestore'
+import { doc, onSnapshot, getDoc } from 'firebase/firestore'
 import { auth, db, COLLECTIONS } from '@/services/firebase'
-import type { User } from '@/types'
+import type { User, UserStatus } from '@/types'
 import { updatePresence } from '@/services/presence.service'
 
 interface AuthContextValue {
@@ -48,8 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setInitialized(true)
       })
 
-      // Update online presence
-      await updatePresence(fbUser.uid, 'online')
+      // Restore saved status (dnd/idle) or default to online — but never restore 'offline' (invisible)
+      const userSnap = await getDoc(doc(db, COLLECTIONS.USERS, fbUser.uid))
+      const savedStatus = userSnap.data()?.status as UserStatus | undefined
+      const initialStatus: UserStatus = (savedStatus && savedStatus !== 'offline') ? savedStatus : 'online'
+      await updatePresence(fbUser.uid, initialStatus)
 
       // Set offline on tab close
       const handleUnload = () => updatePresence(fbUser.uid, 'offline')
