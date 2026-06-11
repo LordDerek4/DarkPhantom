@@ -1,0 +1,46 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 8 * 1024 * 1024; // 8MB
+    }
+
+    function isValidAttachment() {
+      return request.resource.size < 25 * 1024 * 1024; // 25MB
+    }
+
+    // User avatars
+    match /avatars/{userId}/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId) && isValidImage();
+    }
+
+    // User banners
+    match /banners/{userId}/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId) && isValidImage();
+    }
+
+    // Server icons and banners
+    match /servers/{serverId}/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // Message attachments
+    match /attachments/{channelId}/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidAttachment();
+    }
+  }
+}

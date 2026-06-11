@@ -1,0 +1,286 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function memberDoc(serverId) {
+      return /databases/$(database)/documents/serverMembers/$(serverId + '_' + request.auth.uid);
+    }
+
+    function isMember(serverId) {
+      return isAuth() &&
+        exists(memberDoc(serverId)) &&
+        get(memberDoc(serverId)).data.isBanned == false;
+    }
+
+    function isOwner(serverId) {
+      return isAuth() &&
+        get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId == request.auth.uid;
+    }
+
+    function memberCanWrite(serverId) {
+      return isOwner(serverId) || isMember(serverId);
+    }
+
+    function isDMParticipant(channelId) {
+      return isAuth() &&
+        request.auth.uid in get(
+          /databases/$(database)/documents/directMessageChannels/$(channelId)
+        ).data.participantIds;
+    }
+
+    // ─── Users ───────────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if isUser(userId);
+    }
+
+    match /usernames/{username} {
+      allow read: if true; // public — needed for username availability check before signup
+      allow create: if isAuth() && request.resource.data.uid == request.auth.uid;
+      allow delete: if isAuth() && resource.data.uid == request.auth.uid;
+    }
+
+    match /presence/{userId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isUser(userId);
+    }
+
+    // ─── Servers ─────────────────────────────────────────────────────────────
+
+    match /servers/{serverId} {
+      allow read: if isAuth() && (resource.data.isPublic == true || isMember(serverId));
+      allow create: if isAuth() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isOwner(serverId) || isMember(serverId);
+      allow delete: if isOwner(serverId);
+    }
+
+    match /userServers/{docId} {
+      // Owner needs read access to query all members' userServers during server deletion
+      allow read: if isAuth() && (
+        resource.data.userId == request.auth.uid ||
+        isOwner(resource.data.serverId)
+      );
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuth() && (
+        resource.data.userId == request.auth.uid ||
+        isOwner(resource.data.serverId)
+      );
+    }
+
+    // ─── Server Members ───────────────────────────────────────────────────────
+
+    match /serverMembers/{memberId} {
+      allow read: if isAuth() && (isMember(resource.data.serverId) || isOwner(resource.data.serverId));
+      allow create: if isAuth() && (
+        request.resource.data.userId == request.auth.uid ||
+        isOwner(resource.data.serverId)
+      );
+      allow update: if isAuth() && (
+        resource.data.userId == request.auth.uid ||
+        isOwner(resource.data.serverId) ||
+        isMember(resource.data.serverId)
+      );
+      allow delete: if isAuth() && (
+        resource.data.userId == request.auth.uid ||
+        isOwner(resource.data.serverId) ||
+        isMember(resource.data.serverId)
+      );
+    }
+
+    // ─── Roles ───────────────────────────────────────────────────────────────
+
+    match /roles/{roleId} {
+      allow read: if isAuth() && (isMember(resource.data.serverId) || isOwner(resource.data.serverId));
+      allow create: if isAuth() && memberCanWrite(request.resource.data.serverId);
+      allow update, delete: if isAuth() && (
+        isOwner(resource.data.serverId) || isMember(resource.data.serverId)
+      );
+    }
+
+    // ─── Channels ─────────────────────────────────────────────────────────────
+
+    match /channels/{channelId} {
+      allow read: if isAuth() && (isMember(resource.data.serverId) || isOwner(resource.data.serverId));
+      allow create: if isAuth() && memberCanWrite(request.resource.data.serverId);
+      allow update: if isAuth() && memberCanWrite(resource.data.serverId);
+      allow delete: if isAuth() && (
+        isOwner(resource.data.serverId) || isMember(resource.data.serverId)
+      );
+    }
+
+    match /channelReads/{readId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // ─── Messages ─────────────────────────────────────────────────────────────
+
+    match /messages/{messageId} {
+      allow read: if isAuth() && (
+        resource.data.serverId == null || isMember(resource.data.serverId)
+      );
+      allow create: if isAuth() &&
+        request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuth() && (
+        resource.data.authorId == request.auth.uid ||
+        (resource.data.serverId != null && isMember(resource.data.serverId))
+      );
+      allow delete: if isAuth() && (
+        resource.data.authorId == request.auth.uid ||
+        (resource.data.serverId != null && (
+          isOwner(resource.data.serverId) || isMember(resource.data.serverId)
+        ))
+      );
+    }
+
+    // ─── Direct Messages ──────────────────────────────────────────────────────
+
+    match /directMessageChannels/{channelId} {
+      allow read: if isAuth() &&
+        (resource == null || request.auth.uid in resource.data.participantIds);
+      allow create: if isAuth() &&
+        request.auth.uid in request.resource.data.participantIds &&
+        (
+          // 1-to-1 DM: exactly 2 participants
+          (request.resource.data.isGroup == false && request.resource.data.participantIds.size() == 2) ||
+          // Group DM: creator is owner, at least 3 participants
+          (request.resource.data.isGroup == true &&
+           request.resource.data.ownerId == request.auth.uid &&
+           request.resource.data.participantIds.size() >= 3)
+        );
+      allow update: if isAuth() &&
+        request.auth.uid in resource.data.participantIds;
+      allow delete: if isAuth() &&
+        resource.data.isGroup == true &&
+        resource.data.ownerId == request.auth.uid;
+    }
+
+    match /directMessages/{messageId} {
+      allow read: if isAuth() && isDMParticipant(resource.data.dmChannelId);
+      allow create: if isAuth() &&
+        request.resource.data.authorId == request.auth.uid &&
+        isDMParticipant(request.resource.data.dmChannelId);
+      allow update: if isAuth() && resource.data.authorId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.authorId == request.auth.uid;
+    }
+
+    // ─── Invites ──────────────────────────────────────────────────────────────
+
+    match /invites/{inviteId} {
+      allow read: if isAuth();
+      allow create: if isAuth() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuth();
+      allow delete: if isAuth() && (
+        resource.data.createdBy == request.auth.uid ||
+        isOwner(resource.data.serverId)
+      );
+    }
+
+    // ─── Notifications ────────────────────────────────────────────────────────
+
+    match /notifications/{notificationId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth();
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // ─── Moderation Logs ──────────────────────────────────────────────────────
+
+    match /moderationLogs/{logId} {
+      allow read: if isAuth() && isMember(resource.data.serverId);
+      allow create: if isAuth() && isMember(resource.data.serverId);
+      allow update, delete: if false;
+    }
+
+    // ─── Typing / Presence ────────────────────────────────────────────────────
+
+    match /typing/{docId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // ─── Threads ─────────────────────────────────────────────────────────────────
+
+    match /threads/{threadId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuth() && (resource.data.createdBy == request.auth.uid || isMember(resource.data.serverId));
+    }
+    match /threadMessages/{msgId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.authorId == request.auth.uid;
+    }
+    match /voiceMessages/{msgId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.authorId == request.auth.uid;
+    }
+    match /events/{eventId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuth() && (resource.data.createdBy == request.auth.uid || isMember(resource.data.serverId));
+      allow delete: if isAuth() && resource.data.createdBy == request.auth.uid;
+    }
+    match /polls/{pollId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuth();
+      allow delete: if isAuth() && resource.data.createdBy == request.auth.uid;
+    }
+    match /userXP/{docId} { allow read: if isAuth(); allow write: if isAuth(); }
+    match /badges/{badgeId} { allow read: if isAuth(); allow write: if isAuth(); }
+    match /achievements/{achievementId} { allow read: if isAuth(); allow write: if isAuth(); }
+    match /friendships/{friendshipId} {
+      allow read: if isAuth() && (resource.data.requesterId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if isAuth() && request.resource.data.requesterId == request.auth.uid;
+      allow update: if isAuth() && (resource.data.requesterId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      // Can delete: requester cancels, receiver declines, either party unfriends, or blocker unblocks
+      allow delete: if isAuth() && (
+        resource.data.requesterId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+    }
+    match /analytics/{docId} { allow read: if isAuth(); allow write: if isAuth(); }
+    match /communityHealth/{docId} { allow read: if isAuth(); allow write: if isAuth(); }
+    match /knowledgeBase/{docId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuth() && (resource.data.createdBy == request.auth.uid || isMember(resource.data.serverId));
+      allow delete: if isAuth() && resource.data.createdBy == request.auth.uid;
+    }
+    match /aiInteractions/{docId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+    match /summaries/{docId} { allow read: if isAuth(); allow write: if isAuth(); }
+    match /serverListings/{serverId} { allow read: if true; allow write: if isAuth(); }
+    match /communitySettings/{serverId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && (resource == null || resource.data.createdBy == request.auth.uid || isOwner(serverId));
+    }
+    match /communityRules/{serverId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && (isOwner(serverId) || isMember(serverId));
+    }
+    match /marketplace/{pluginId} { allow read: if isAuth(); allow write: if isAuth(); }
+  }
+}
