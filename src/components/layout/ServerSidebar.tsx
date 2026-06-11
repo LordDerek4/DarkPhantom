@@ -8,7 +8,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { Badge } from '@/components/ui/Badge'
 import { ServerSkeleton } from '@/components/ui/LoadingSkeleton'
+import { subscribeToFriendships } from '@/services/friends.service'
 import type { Server } from '@/types'
+import type { Friendship } from '@/types/extended'
 
 interface ContextMenu {
   serverId: string
@@ -25,6 +27,14 @@ export function ServerSidebar() {
   const [showAddMenu, setShowAddMenu] = useState(false)
   const addBtnRef = useRef<HTMLButtonElement>(null)
   const [addMenuPos, setAddMenuPos] = useState({ x: 0, y: 0 })
+  const [pendingFriendCount, setPendingFriendCount] = useState(0)
+
+  useEffect(() => {
+    if (!user?.uid) return
+    return subscribeToFriendships(user.uid, (fs: Friendship[]) => {
+      setPendingFriendCount(fs.filter(f => f.status === 'pending' && f.receiverId === user.uid).length)
+    })
+  }, [user?.uid])
 
   const totalDMUnread = dmChannels.reduce((sum, c) => {
     const unread = Object.values(c.unreadCounts ?? {}).reduce((a, b) => a + b, 0)
@@ -190,16 +200,23 @@ export function ServerSidebar() {
 
           {/* Friends */}
           <Tooltip content="Friends" side="right">
-            <button
-              type="button"
-              onClick={() => setViewMode('friends')}
-              className={cn(
-                'w-12 h-12 rounded-3xl hover:bg-pulse-brand hover:rounded-2xl flex items-center justify-center transition-all duration-200 shrink-0',
-                viewMode === 'friends' ? 'bg-pulse-brand rounded-2xl' : 'bg-pulse-bg-secondary'
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setViewMode('friends')}
+                className={cn(
+                  'w-12 h-12 rounded-3xl hover:bg-pulse-brand hover:rounded-2xl flex items-center justify-center transition-all duration-200 shrink-0',
+                  viewMode === 'friends' ? 'bg-pulse-brand rounded-2xl' : 'bg-pulse-bg-secondary'
+                )}
+              >
+                <Users size={22} className="text-white" />
+              </button>
+              {pendingFriendCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-pulse-text-danger rounded-full text-[10px] font-bold text-white flex items-center justify-center leading-none pointer-events-none">
+                  {pendingFriendCount > 9 ? '9+' : pendingFriendCount}
+                </span>
               )}
-            >
-              <Users size={22} className="text-white" />
-            </button>
+            </div>
           </Tooltip>
         </div>
 

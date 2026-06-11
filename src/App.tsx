@@ -23,6 +23,7 @@ import { UserProfileModal } from '@/components/profile/UserProfileModal'
 import { ServerSettingsModal } from '@/components/server/ServerSettingsModal'
 import { CallOverlay } from '@/components/call/CallOverlay'
 import { IncomingCallNotification } from '@/components/call/IncomingCallNotification'
+import { NotificationsPanel } from '@/components/notifications/NotificationsPanel'
 
 const DiscoverPage = lazy(() => import('@/components/discover/DiscoverPage').then(m => ({ default: m.DiscoverPage })))
 const FriendsPanel = lazy(() => import('@/components/friends/FriendsPanel').then(m => ({ default: m.FriendsPanel })))
@@ -121,6 +122,7 @@ export default function App() {
               <UserSettings />
               <CallOverlay />
               <IncomingCallNotification />
+              <NotificationsPanel />
             </ProtectedRoute>
           }
         />
@@ -146,6 +148,7 @@ function LandingOrApp() {
       <UserSettings />
       <CallOverlay />
       <IncomingCallNotification />
+      <NotificationsPanel />
     </ProtectedRoute>
   )
   return <LandingPage />

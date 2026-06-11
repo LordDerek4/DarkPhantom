@@ -10,6 +10,7 @@ import type {
   DirectMessageChannel,
   UnreadInfo,
   ContextMenuState,
+  Notification,
 } from '@/types'
 
 interface NavEntry {
@@ -60,6 +61,10 @@ interface AppState {
   activeCallId: string | null
   activeCallType: 'voice' | 'video' | null
   incomingCall: { callId: string; initiatorId: string; type: 'voice' | 'video' } | null
+
+  // Notifications
+  notifications: Notification[]
+  isNotificationsPanelOpen: boolean
 }
 
 interface AppActions {
@@ -141,6 +146,13 @@ interface AppActions {
   setActiveCallId: (id: string | null) => void
   setActiveCallType: (type: 'voice' | 'video' | null) => void
   setIncomingCall: (call: { callId: string; initiatorId: string; type: 'voice' | 'video' } | null) => void
+
+  // Notifications
+  setNotifications: (notifications: Notification[]) => void
+  markNotificationReadLocal: (id: string) => void
+  markAllNotificationsReadLocal: () => void
+  toggleNotificationsPanel: () => void
+  closeNotificationsPanel: () => void
 }
 
 export const useAppStore = create<AppState & AppActions>()(
@@ -171,6 +183,8 @@ export const useAppStore = create<AppState & AppActions>()(
     activeCallId: null,
     activeCallType: null,
     incomingCall: null,
+    notifications: [],
+    isNotificationsPanelOpen: false,
     isSettingsOpen: false,
     settingsTab: 'my-account',
     serverSettingsId: null,
@@ -359,6 +373,17 @@ export const useAppStore = create<AppState & AppActions>()(
     setActiveCallId: id => set({ activeCallId: id }),
     setActiveCallType: type => set({ activeCallType: type }),
     setIncomingCall: call => set({ incomingCall: call }),
+
+    // Notifications
+    setNotifications: notifications => set({ notifications }),
+    markNotificationReadLocal: id => set(s => ({
+      notifications: s.notifications.map(n => n.id === id ? { ...n, isRead: true } : n),
+    })),
+    markAllNotificationsReadLocal: () => set(s => ({
+      notifications: s.notifications.map(n => ({ ...n, isRead: true })),
+    })),
+    toggleNotificationsPanel: () => set(s => ({ isNotificationsPanelOpen: !s.isNotificationsPanelOpen })),
+    closeNotificationsPanel: () => set({ isNotificationsPanelOpen: false }),
   }))
 )
 

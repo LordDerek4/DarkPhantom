@@ -4,6 +4,7 @@ import {
   addDoc,
   updateDoc,
   getDocs,
+  onSnapshot,
   query,
   where,
   orderBy,
@@ -50,6 +51,21 @@ export async function createNotification(
       tag: options.messageId ?? undefined,
     })
   }
+}
+
+export function subscribeToNotifications(
+  userId: string,
+  callback: (notifications: Notification[]) => void,
+): () => void {
+  const q = query(
+    collection(db, COLLECTIONS.NOTIFICATIONS),
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+    limit(50),
+  )
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Notification))
+  })
 }
 
 export async function getUserNotifications(userId: string): Promise<Notification[]> {

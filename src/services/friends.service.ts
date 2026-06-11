@@ -3,6 +3,8 @@ import {
   where, getDocs, onSnapshot, serverTimestamp, getDoc,
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { createNotification } from './notification.service'
+import { getUserById } from './auth.service'
 import { searchUsers } from './user.service'
 import type { Friendship } from '@/types/extended'
 import type { User } from '@/types'
@@ -25,6 +27,16 @@ export async function sendFriendRequest(requesterId: string, receiverId: string)
     updatedAt: serverTimestamp(),
     mutualServerIds: [],
   })
+
+  // Notify receiver
+  const sender = await getUserById(requesterId).catch(() => null)
+  await createNotification(
+    receiverId,
+    'friend_request',
+    'Friend Request',
+    `${sender?.displayName ?? 'Someone'} sent you a friend request`,
+    { fromUserId: requesterId, iconUrl: sender?.avatarUrl ?? undefined },
+  ).catch(() => {})
 }
 
 export async function sendFriendRequestByUsername(
@@ -39,10 +51,23 @@ export async function sendFriendRequestByUsername(
 
 export async function respondToFriendRequest(friendshipId: string, accept: boolean): Promise<void> {
   if (accept) {
+    const snap = await getDoc(doc(db, FRIENDSHIPS, friendshipId))
     await updateDoc(doc(db, FRIENDSHIPS, friendshipId), {
       status: 'accepted',
       updatedAt: serverTimestamp(),
     })
+    // Notify the original requester that their request was accepted
+    if (snap.exists()) {
+      const data = snap.data()
+      const accepter = await getUserById(data.receiverId).catch(() => null)
+      await createNotification(
+        data.requesterId,
+        'friend_request',
+        'Friend Request Accepted',
+        `${accepter?.displayName ?? 'Someone'} accepted your friend request`,
+        { fromUserId: data.receiverId, iconUrl: accepter?.avatarUrl ?? undefined },
+      ).catch(() => {})
+    }
   } else {
     await deleteDoc(doc(db, FRIENDSHIPS, friendshipId))
   }

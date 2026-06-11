@@ -1,5 +1,6 @@
 import React from 'react'
-import { Hash, Megaphone, Bell, Pin, Search, Users, HelpCircle, Inbox, ChevronLeft, ChevronRight, Sparkles, MessageSquare, BarChart2, Calendar, Menu, Phone, Video } from 'lucide-react'
+import { Hash, Megaphone, Pin, Search, Users, HelpCircle, Inbox, ChevronLeft, ChevronRight, Sparkles, MessageSquare, BarChart2, Calendar, Menu, Phone, Video } from 'lucide-react'
+import { NotificationBellButton } from '@/components/notifications/NotificationsPanel'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
 import { useServerDetails } from '@/hooks/useServer'
@@ -102,7 +103,7 @@ export function TopBar() {
           <TopBarButton icon={<Video size={20} />} tooltip="Video Call" onClick={() => startCall('video')} />
           <div className="w-px h-5 bg-white/20 mx-1" />
           <TopBarButton icon={<Search size={20} />} tooltip="Search" onClick={() => setSearchOpen(true)} />
-          <TopBarButton icon={<Inbox size={20} />} tooltip="Inbox" onClick={() => toast('No new inbox items', { icon: '📬' })} />
+          <NotificationBellButton />
           <TopBarButton icon={<HelpCircle size={20} />} tooltip="Help" onClick={() => toast('Help docs coming soon', { icon: '❓' })} />
         </div>
       </header>
@@ -141,7 +142,7 @@ export function TopBar() {
       )}
 
       <div className="ml-auto flex items-center gap-1">
-        <TopBarButton icon={<Bell size={20} />} tooltip="Notification Settings" onClick={() => toast('Notification settings coming soon', { icon: '🔔' })} />
+        <NotificationBellButton />
         <TopBarButton icon={<Pin size={20} />} tooltip="Pinned Messages" onClick={() => useAppStore.getState().togglePanel('threads')} />
         <TopBarButton
           icon={<MessageSquare size={20} />}
@@ -169,7 +170,6 @@ export function TopBar() {
         />
         <div className="w-px h-5 bg-white/20 mx-1" />
         <TopBarButton icon={<Search size={20} />} tooltip="Search" onClick={() => setSearchOpen(true)} />
-        <TopBarButton icon={<Inbox size={20} />} tooltip="Inbox" onClick={() => toast('No new inbox items', { icon: '📬' })} />
         <TopBarButton icon={<HelpCircle size={20} />} tooltip="Help" onClick={() => toast('Help docs coming soon', { icon: '❓' })} />
       </div>
     </header>
