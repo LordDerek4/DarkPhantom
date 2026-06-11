@@ -21,6 +21,8 @@ import { JoinServerModal } from '@/components/server/JoinServerModal'
 import { CreateCommunityModal } from '@/components/server/CreateCommunityModal'
 import { UserProfileModal } from '@/components/profile/UserProfileModal'
 import { ServerSettingsModal } from '@/components/server/ServerSettingsModal'
+import { CallOverlay } from '@/components/call/CallOverlay'
+import { IncomingCallNotification } from '@/components/call/IncomingCallNotification'
 
 const DiscoverPage = lazy(() => import('@/components/discover/DiscoverPage').then(m => ({ default: m.DiscoverPage })))
 const FriendsPanel = lazy(() => import('@/components/friends/FriendsPanel').then(m => ({ default: m.FriendsPanel })))
@@ -117,6 +119,8 @@ export default function App() {
               <MainApp />
               <GlobalSearch />
               <UserSettings />
+              <CallOverlay />
+              <IncomingCallNotification />
             </ProtectedRoute>
           }
         />
@@ -140,6 +144,8 @@ function LandingOrApp() {
       <MainApp />
       <GlobalSearch />
       <UserSettings />
+      <CallOverlay />
+      <IncomingCallNotification />
     </ProtectedRoute>
   )
   return <LandingPage />

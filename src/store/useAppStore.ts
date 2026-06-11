@@ -55,6 +55,11 @@ interface AppState {
 
   // Online presence
   presences: Record<string, 'online' | 'idle' | 'dnd' | 'offline'>
+
+  // Calling
+  activeCallId: string | null
+  activeCallType: 'voice' | 'video' | null
+  incomingCall: { callId: string; initiatorId: string; type: 'voice' | 'video' } | null
 }
 
 interface AppActions {
@@ -131,6 +136,11 @@ interface AppActions {
   // Presence
   setPresence: (userId: string, status: 'online' | 'idle' | 'dnd' | 'offline') => void
   setPresences: (presences: Record<string, 'online' | 'idle' | 'dnd' | 'offline'>) => void
+
+  // Calling
+  setActiveCallId: (id: string | null) => void
+  setActiveCallType: (type: 'voice' | 'video' | null) => void
+  setIncomingCall: (call: { callId: string; initiatorId: string; type: 'voice' | 'video' } | null) => void
 }
 
 export const useAppStore = create<AppState & AppActions>()(
@@ -158,6 +168,9 @@ export const useAppStore = create<AppState & AppActions>()(
     isJoinServerOpen: false,
     isMobileSidebarOpen: false,
     isSearchOpen: false,
+    activeCallId: null,
+    activeCallType: null,
+    incomingCall: null,
     isSettingsOpen: false,
     settingsTab: 'my-account',
     serverSettingsId: null,
@@ -341,6 +354,11 @@ export const useAppStore = create<AppState & AppActions>()(
     setPresence: (userId, status) =>
       set(s => ({ presences: { ...s.presences, [userId]: status } })),
     setPresences: presences => set(s => ({ presences: { ...s.presences, ...presences } })),
+
+    // Calling
+    setActiveCallId: id => set({ activeCallId: id }),
+    setActiveCallType: type => set({ activeCallType: type }),
+    setIncomingCall: call => set({ incomingCall: call }),
   }))
 )
 

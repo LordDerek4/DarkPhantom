@@ -282,5 +282,23 @@ service cloud.firestore {
       allow write: if isAuth() && (isOwner(serverId) || isMember(serverId));
     }
     match /marketplace/{pluginId} { allow read: if isAuth(); allow write: if isAuth(); }
+
+    match /calls/{callId} {
+      allow read: if isAuth() && (
+        resource.data.initiatorId == request.auth.uid ||
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid in resource.data.invitedIds
+      );
+      allow create: if isAuth() && request.resource.data.initiatorId == request.auth.uid;
+      allow update: if isAuth() && (
+        resource.data.initiatorId == request.auth.uid ||
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid in resource.data.invitedIds
+      );
+      match /signals/{signalId} {
+        allow read: if isAuth();
+        allow create: if isAuth() && request.resource.data.from == request.auth.uid;
+      }
+    }
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Hash, Megaphone, Bell, Pin, Search, Users, HelpCircle, Inbox, ChevronLeft, ChevronRight, Sparkles, MessageSquare, BarChart2, Calendar, Menu } from 'lucide-react'
+import { Hash, Megaphone, Bell, Pin, Search, Users, HelpCircle, Inbox, ChevronLeft, ChevronRight, Sparkles, MessageSquare, BarChart2, Calendar, Menu, Phone, Video } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
 import { useServerDetails } from '@/hooks/useServer'
@@ -7,6 +7,7 @@ import { useUser } from '@/hooks/useUserCache'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar } from '@/components/ui/Avatar'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { createCall } from '@/services/call.service'
 import toast from 'react-hot-toast'
 
 export function TopBar() {
@@ -23,6 +24,8 @@ export function TopBar() {
     goBack,
     goForward,
     openMobileSidebar,
+    setActiveCallId,
+    setActiveCallType,
   } = useAppStore()
 
   const MobileMenuBtn = () => (
@@ -46,6 +49,17 @@ export function TopBar() {
   const dmPartner = useUser(dmPartnerId ?? null)
 
   const activeChannel = channels.find(c => c.id === activeChannelId)
+
+  const startCall = async (type: 'voice' | 'video') => {
+    if (!user?.uid || !dmPartnerId) return
+    try {
+      const callId = await createCall(user.uid, [dmPartnerId], type)
+      setActiveCallId(callId)
+      setActiveCallType(type)
+    } catch {
+      toast.error('Failed to start call')
+    }
+  }
 
   const NavButtons = () => (
     <div className="flex items-center gap-0.5 mr-1 shrink-0">
@@ -84,6 +98,9 @@ export function TopBar() {
         <Avatar src={dmPartner.avatarUrl} name={dmPartner.displayName} userId={dmPartner.uid} size="sm" showStatus />
         <span className="font-semibold text-pulse-text-normal">{dmPartner.displayName}</span>
         <div className="ml-auto flex items-center gap-1">
+          <TopBarButton icon={<Phone size={20} />} tooltip="Voice Call" onClick={() => startCall('voice')} />
+          <TopBarButton icon={<Video size={20} />} tooltip="Video Call" onClick={() => startCall('video')} />
+          <div className="w-px h-5 bg-white/20 mx-1" />
           <TopBarButton icon={<Search size={20} />} tooltip="Search" onClick={() => setSearchOpen(true)} />
           <TopBarButton icon={<Inbox size={20} />} tooltip="Inbox" onClick={() => toast('No new inbox items', { icon: '📬' })} />
           <TopBarButton icon={<HelpCircle size={20} />} tooltip="Help" onClick={() => toast('Help docs coming soon', { icon: '❓' })} />
