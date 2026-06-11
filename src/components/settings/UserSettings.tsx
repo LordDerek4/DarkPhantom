@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone'
 import {
   User, Bell, Shield, Palette, LogOut, X, Camera, Check,
   Smile, Eye, EyeOff, UserCircle, Settings, Globe, Database,
-  ExternalLink, Download, Trash2,
+  ExternalLink, Download, Trash2, BookOpen,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
@@ -41,7 +41,7 @@ const CUSTOM_STATUS_PRESETS = [
 ]
 
 export function UserSettings() {
-  const { isSettingsOpen, settingsTab, setSettingsOpen } = useAppStore()
+  const { isSettingsOpen, settingsTab, setSettingsOpen, setShowTutorial } = useAppStore()
   const { user, signOut, updateProfile: updateAuthProfile, uploadAndSetAvatar, uploadAndSetBanner } = useAuth()
   const [activeTab, setActiveTab] = useState(settingsTab)
 
@@ -309,6 +309,29 @@ export function UserSettings() {
                 <div className="bg-pulse-bg-primary rounded-xl overflow-hidden border border-white/5">
                   <AccountRow label="Email" value={user.email} />
                   <AccountRow label="Username" value={`@${user.username}`} divider={false} />
+                </div>
+
+                {/* Help & Onboarding */}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-pulse-text-muted mb-3">Help</h3>
+                  <div className="bg-pulse-bg-primary rounded-xl border border-white/5 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3.5">
+                      <div>
+                        <p className="text-sm font-medium text-pulse-text-normal">App Tutorial</p>
+                        <p className="text-xs text-pulse-text-muted mt-0.5">Replay the guided tour of AevixChat</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSettingsOpen(false)
+                          setTimeout(() => setShowTutorial(true), 200)
+                        }}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-pulse-brand/10 hover:bg-pulse-brand/20 text-pulse-brand text-xs font-semibold rounded-lg transition-colors shrink-0"
+                      >
+                        <BookOpen size={13} />
+                        View tutorial
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

@@ -53,9 +53,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function MainApp() {
-  const { viewMode, isCreateCommunityOpen, closeCreateCommunity, isJoinServerOpen, openJoinServer, closeJoinServer } = useAppStore()
+  const { viewMode, isCreateCommunityOpen, closeCreateCommunity, isJoinServerOpen, openJoinServer, closeJoinServer, showTutorial } = useAppStore()
   const [joinInviteCode, setJoinInviteCode] = useState('')
-  const { showTutorial, completeTutorial, skipTutorial } = useTutorial()
+  const { completeTutorial, skipTutorial } = useTutorial()
 
   useEffect(() => {
     requestNotificationPermission()

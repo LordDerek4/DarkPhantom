@@ -65,6 +65,9 @@ interface AppState {
   // Notifications
   notifications: Notification[]
   isNotificationsPanelOpen: boolean
+
+  // Tutorial
+  showTutorial: boolean
 }
 
 interface AppActions {
@@ -153,6 +156,9 @@ interface AppActions {
   markAllNotificationsReadLocal: () => void
   toggleNotificationsPanel: () => void
   closeNotificationsPanel: () => void
+
+  // Tutorial
+  setShowTutorial: (show: boolean) => void
 }
 
 export const useAppStore = create<AppState & AppActions>()(
@@ -185,6 +191,7 @@ export const useAppStore = create<AppState & AppActions>()(
     incomingCall: null,
     notifications: [],
     isNotificationsPanelOpen: false,
+    showTutorial: false,
     isSettingsOpen: false,
     settingsTab: 'my-account',
     serverSettingsId: null,
@@ -384,6 +391,9 @@ export const useAppStore = create<AppState & AppActions>()(
     })),
     toggleNotificationsPanel: () => set(s => ({ isNotificationsPanelOpen: !s.isNotificationsPanelOpen })),
     closeNotificationsPanel: () => set({ isNotificationsPanelOpen: false }),
+
+    // Tutorial
+    setShowTutorial: show => set({ showTutorial: show }),
   }))
 )
 

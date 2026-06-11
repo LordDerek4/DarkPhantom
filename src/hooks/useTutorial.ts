@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { db, COLLECTIONS } from '@/services/firebase'
 import { useAuth } from './useAuth'
+import { useAppStore } from '@/store/useAppStore'
 
 export function useTutorial() {
   const { user } = useAuth()
-  const [showTutorial, setShowTutorial] = useState(false)
+  const { setShowTutorial } = useAppStore()
   const [checked, setChecked] = useState(false)
 
   useEffect(() => {
@@ -29,5 +30,5 @@ export function useTutorial() {
 
   const skipTutorial = () => completeTutorial()
 
-  return { showTutorial, completeTutorial, skipTutorial }
+  return { completeTutorial, skipTutorial }
 }
