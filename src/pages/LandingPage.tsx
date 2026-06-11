@@ -58,40 +58,15 @@ const FEATURES = [
   },
 ]
 
-const PRICING = [
-  {
-    name: 'Free',
-    price: '£0',
-    period: 'forever',
-    desc: 'Everything you need to get started.',
-    features: [
-      'Unlimited servers',
-      'Unlimited messages',
-      'Up to 500 members per server',
-      'File sharing up to 8 MB',
-      'Community discovery',
-      'Invite links & codes',
-    ],
-    cta: 'Get Started Free',
-    highlight: false,
-  },
-  {
-    name: 'Pro',
-    price: '£4.99',
-    period: 'per month',
-    desc: 'For power users and growing communities.',
-    features: [
-      'Everything in Free',
-      'File sharing up to 100 MB',
-      'Animated avatar',
-      'Custom profile badge',
-      'Priority support',
-      'Early access to new features',
-    ],
-    cta: 'Coming Soon',
-    highlight: true,
-    soon: true,
-  },
+const PRICING_FEATURES = [
+  'Unlimited servers & channels',
+  'Unlimited messages',
+  'Up to 500 members per server',
+  'File sharing up to 8 MB',
+  'Community discovery',
+  'Invite links & codes',
+  'Custom roles & permissions',
+  'Real-time presence & notifications',
 ]
 
 function NavBar() {
@@ -141,7 +116,7 @@ function NavBar() {
           )}
           <div className="pt-2 flex flex-col gap-2">
             <Link to="/auth" className="block text-center text-sm text-pulse-text-muted border border-white/10 rounded-xl py-2">Sign In</Link>
-            <Link to="/auth" className="block text-center text-sm bg-pulse-brand text-white font-semibold rounded-xl py-2">Get Started Free</Link>
+            <Link to="/auth" className="block text-center text-sm bg-pulse-brand text-white font-semibold rounded-xl py-2">Get Started — £3.99</Link>
           </div>
         </div>
       )}
@@ -238,7 +213,7 @@ export function LandingPage() {
                 to="/auth"
                 className="flex items-center gap-2 bg-pulse-brand hover:bg-pulse-brand-hover text-white font-bold px-7 py-3.5 rounded-2xl transition-colors text-base shadow-lg shadow-pulse-brand/25"
               >
-                Get Started — It's Free
+                Get Started — £3.99
                 <ArrowRight size={18} />
               </Link>
               <a
@@ -338,51 +313,38 @@ export function LandingPage() {
 
       {/* Pricing */}
       <section id="pricing" className="py-20 px-6 bg-pulse-bg-secondary/40">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
+        <div className="max-w-lg mx-auto">
+          <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-3">Simple pricing</h2>
-            <p className="text-pulse-text-muted text-lg">No hidden fees. Start free, upgrade when you're ready.</p>
+            <p className="text-pulse-text-muted text-lg">One payment. Everything included. Forever.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            {PRICING.map(plan => (
-              <div
-                key={plan.name}
-                className={`rounded-2xl p-6 border ${plan.highlight ? 'bg-pulse-brand/10 border-pulse-brand/40 relative overflow-hidden' : 'bg-pulse-bg-secondary border-white/10'}`}
-              >
-                {plan.highlight && (
-                  <div className="absolute top-0 right-0 bg-pulse-brand text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">COMING SOON</div>
-                )}
-                <div className="mb-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-pulse-text-muted mb-1">{plan.name}</p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-4xl font-black text-white">{plan.price}</span>
-                    <span className="text-pulse-text-muted text-sm">/ {plan.period}</span>
-                  </div>
-                  <p className="text-sm text-pulse-text-muted mt-1.5">{plan.desc}</p>
-                </div>
-
-                <ul className="space-y-2.5 mb-6">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-pulse-text-normal">
-                      <Check size={14} className={plan.highlight ? 'text-pulse-brand' : 'text-green-400'} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  to={plan.soon ? '#' : '/auth'}
-                  className={`block text-center font-semibold py-2.5 rounded-xl text-sm transition-colors ${
-                    plan.highlight
-                      ? 'bg-pulse-brand/20 text-pulse-brand border border-pulse-brand/30 cursor-default'
-                      : 'bg-pulse-brand hover:bg-pulse-brand-hover text-white'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
+          <div className="rounded-2xl bg-pulse-brand/10 border border-pulse-brand/40 p-8 text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-pulse-brand/10 via-transparent to-purple-500/10 pointer-events-none" />
+            <div className="relative">
+              <p className="text-xs font-bold uppercase tracking-widest text-pulse-brand mb-3">Full Access</p>
+              <div className="flex items-end justify-center gap-1.5 mb-1">
+                <span className="text-6xl font-black text-white">£3.99</span>
               </div>
-            ))}
+              <p className="text-pulse-text-muted text-sm mb-8">One-time payment — no subscriptions, no renewals</p>
+
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left mb-8">
+                {PRICING_FEATURES.map(f => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-pulse-text-normal">
+                    <Check size={14} className="text-pulse-brand shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-2 bg-pulse-brand hover:bg-pulse-brand-hover text-white font-bold px-8 py-3.5 rounded-xl transition-colors text-base shadow-lg shadow-pulse-brand/25"
+              >
+                Get Started — £3.99
+                <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -391,12 +353,12 @@ export function LandingPage() {
       <section className="py-20 px-6">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Ready to join the pulse?</h2>
-          <p className="text-pulse-text-muted text-lg mb-8">Create your free account in seconds. No credit card required.</p>
+          <p className="text-pulse-text-muted text-lg mb-8">Get full lifetime access for a one-time payment of £3.99.</p>
           <Link
             to="/auth"
             className="inline-flex items-center gap-2 bg-pulse-brand hover:bg-pulse-brand-hover text-white font-bold px-8 py-4 rounded-2xl transition-colors text-base shadow-lg shadow-pulse-brand/25"
           >
-            Get Started Free
+            Get Started — £3.99
             <ArrowRight size={18} />
           </Link>
         </div>

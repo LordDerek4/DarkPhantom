@@ -46,7 +46,7 @@ export function PrivacyPage() {
 
       <Section title="4. Data Storage & Security">
         <P>Your data is stored securely using Google Firebase (Firestore and Firebase Storage), which provides industry-standard encryption in transit (TLS) and at rest. We enforce strict Firestore security rules to ensure users can only access data they are authorised to see.</P>
-        <P>We take data security seriously, but no system is 100% secure. If you discover a vulnerability, please report it to <a href="mailto:security@pulsechat.app" className="text-pulse-brand hover:underline">security@pulsechat.app</a>.</P>
+        <P>We take data security seriously, but no system is 100% secure. If you discover a vulnerability, please report it to <a href="mailto:AevixChat@Hotmail.com" className="text-pulse-brand hover:underline">AevixChat@Hotmail.com</a>.</P>
       </Section>
 
       <Section title="5. Data Sharing">
@@ -69,7 +69,7 @@ export function PrivacyPage() {
           'Portability: Request your data in a machine-readable format',
           'Objection: Object to certain types of processing',
         ]} />
-        <P>To exercise any of these rights, email us at <a href="mailto:privacy@pulsechat.app" className="text-pulse-brand hover:underline">privacy@pulsechat.app</a> or use the Data & Privacy controls in your account settings.</P>
+        <P>To exercise any of these rights, email us at <a href="mailto:AevixChat@Hotmail.com" className="text-pulse-brand hover:underline">AevixChat@Hotmail.com</a> or use the Data & Privacy controls in your account settings.</P>
       </Section>
 
       <Section title="7. Data Retention">
@@ -90,7 +90,7 @@ export function PrivacyPage() {
       </Section>
 
       <Section title="11. Contact">
-        <P>For privacy-related questions or requests, contact us at <a href="mailto:privacy@pulsechat.app" className="text-pulse-brand hover:underline">privacy@pulsechat.app</a>.</P>
+        <P>For privacy-related questions or requests, contact us at <a href="mailto:AevixChat@Hotmail.com" className="text-pulse-brand hover:underline">AevixChat@Hotmail.com</a>.</P>
       </Section>
     </DocsLayout>
   )

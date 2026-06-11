@@ -620,7 +620,7 @@ export function UserSettings() {
                       <p className="text-xs text-pulse-text-muted mt-0.5">GDPR requests, corrections, objections</p>
                     </div>
                     <a
-                      href="mailto:privacy@pulsechat.app"
+                      href="mailto:AevixChat@Hotmail.com"
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-pulse-text-normal text-xs font-medium rounded-lg transition-colors"
                     >
                       <ExternalLink size={13} />

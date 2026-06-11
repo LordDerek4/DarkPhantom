@@ -106,7 +106,7 @@ export function SupportPage() {
       </Section>
 
       <Section title="Email support">
-        <P>You can also email us directly at <a href="mailto:support@pulsechat.app" className="text-pulse-brand hover:underline">support@pulsechat.app</a>. We aim to respond within 48 hours.</P>
+        <P>You can also email us directly at <a href="mailto:AevixChat@Hotmail.com" className="text-pulse-brand hover:underline">AevixChat@Hotmail.com</a>. We aim to respond within 48 hours.</P>
       </Section>
     </DocsLayout>
   )

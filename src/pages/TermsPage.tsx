@@ -72,7 +72,7 @@ export function TermsPage() {
       </Section>
 
       <Section title="12. Contact">
-        <P>For questions about these Terms, contact us at <a href="mailto:legal@pulsechat.app" className="text-pulse-brand hover:underline">legal@pulsechat.app</a>.</P>
+        <P>For questions about these Terms, contact us at <a href="mailto:AevixChat@Hotmail.com" className="text-pulse-brand hover:underline">AevixChat@Hotmail.com</a>.</P>
       </Section>
     </DocsLayout>
   )
