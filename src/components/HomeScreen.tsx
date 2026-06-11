@@ -4,6 +4,7 @@ import { MessageSquare, Plus, Compass, Users, Zap, ArrowRight, Hash } from 'luci
 import { useAuth } from '@/hooks/useAuth'
 import { useAppStore } from '@/store/useAppStore'
 import { Avatar } from '@/components/ui/Avatar'
+import { AppLogo } from '@/components/ui/AppLogo'
 import { getTrendingServers } from '@/services/discover.service'
 import type { ServerListing } from '@/types/extended'
 
@@ -29,9 +30,7 @@ export function HomeScreen() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-5 mb-10"
         >
-          <div className="w-16 h-16 rounded-2xl bg-pulse-brand flex items-center justify-center shadow-elevation-high shrink-0">
-            <span className="text-white font-bold text-3xl">P</span>
-          </div>
+          <AppLogo size={64} showText={false} />
           <div>
             <h1 className="text-2xl font-bold text-white">
               Welcome back, {user?.displayName?.split(' ')[0] ?? 'there'}!

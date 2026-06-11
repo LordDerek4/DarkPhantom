@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LoginForm } from './LoginForm'
 import { SignupForm } from './SignupForm'
+import { AppLogo } from '@/components/ui/AppLogo'
 
 export function AuthPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -17,12 +18,7 @@ export function AuthPage() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pulse-brand flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
-            <span className="text-2xl font-bold text-white">PulseChat</span>
-          </div>
+          <AppLogo size={40} textClassName="text-2xl" />
         </div>
 
         {/* Card */}

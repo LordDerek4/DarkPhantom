@@ -5,6 +5,7 @@ import {
   MessageSquare, Users, Compass, Zap, Shield, Hash,
   ArrowRight, Check, ChevronDown, Menu, X,
 } from 'lucide-react'
+import { AppLogo } from '@/components/ui/AppLogo'
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
@@ -76,9 +77,8 @@ function NavBar() {
   return (
     <header className="fixed top-0 inset-x-0 z-40 bg-pulse-bg-primary/80 backdrop-blur-xl border-b border-white/5">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 font-bold text-lg text-white">
-          <div className="w-8 h-8 rounded-xl bg-pulse-brand flex items-center justify-center text-white font-black text-sm">P</div>
-          PulseChat
+        <Link to="/">
+          <AppLogo size={32} textClassName="text-lg" />
         </Link>
 
         {/* Desktop nav */}
@@ -130,10 +130,7 @@ function Footer() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 font-bold text-white mb-3">
-              <div className="w-7 h-7 rounded-lg bg-pulse-brand flex items-center justify-center text-white font-black text-xs">P</div>
-              PulseChat
-            </div>
+            <AppLogo size={28} textClassName="text-base" className="mb-3" />
             <p className="text-sm text-pulse-text-muted leading-relaxed">The community platform built for everyone.</p>
           </div>
 

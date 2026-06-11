@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { AppLogo } from '@/components/ui/AppLogo'
 
 const DOCS_LINKS = [
   { href: '/about', label: 'About PulseChat' },
@@ -20,8 +21,7 @@ export function DocsLayout({ children, title }: { children: React.ReactNode; tit
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-sm text-pulse-text-muted hover:text-white transition-colors">
             <ArrowLeft size={15} />
-            <div className="w-6 h-6 rounded-lg bg-pulse-brand flex items-center justify-center text-white font-black text-xs">P</div>
-            PulseChat
+            <AppLogo size={24} textClassName="text-sm" />
           </Link>
           <Link to="/auth" className="text-sm bg-pulse-brand hover:bg-pulse-brand-hover text-white font-semibold px-4 py-1.5 rounded-xl transition-colors">
             Open App

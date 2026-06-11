@@ -1,6 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthPage } from '@/components/auth/AuthPage'
+import { AppLogo } from '@/components/ui/AppLogo'
 import { LandingPage } from '@/pages/LandingPage'
 import { AboutPage } from '@/pages/AboutPage'
 import { SupportPage } from '@/pages/SupportPage'
@@ -31,9 +32,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-pulse-bg-primary flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-pulse-brand flex items-center justify-center">
-            <span className="text-white font-bold text-xl">P</span>
-          </div>
+          <AppLogo size={48} showText={false} />
           <div className="flex gap-1">
             {[0, 1, 2].map(i => (
               <div key={i} className="w-2 h-2 rounded-full bg-pulse-brand animate-pulse-dot" style={{ animationDelay: `${i * 0.2}s` }} />
