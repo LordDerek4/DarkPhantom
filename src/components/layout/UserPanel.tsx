@@ -81,7 +81,7 @@ export function UserPanel() {
   const currentStatus = useAppStore.getState().presences[user.uid] ?? user.status ?? 'offline'
 
   return (
-    <div className="relative h-14 bg-pulse-bg-primary flex items-center px-2 gap-1 shrink-0">
+    <div data-tutorial="user-panel" className="relative h-14 bg-pulse-bg-primary flex items-center px-2 gap-1 shrink-0">
       {/* Avatar + name — click to view own profile */}
       <button
         onClick={() => setUserProfileId(user.uid)}

@@ -24,6 +24,8 @@ import { ServerSettingsModal } from '@/components/server/ServerSettingsModal'
 import { CallOverlay } from '@/components/call/CallOverlay'
 import { IncomingCallNotification } from '@/components/call/IncomingCallNotification'
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel'
+import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay'
+import { useTutorial } from '@/hooks/useTutorial'
 
 const DiscoverPage = lazy(() => import('@/components/discover/DiscoverPage').then(m => ({ default: m.DiscoverPage })))
 const FriendsPanel = lazy(() => import('@/components/friends/FriendsPanel').then(m => ({ default: m.FriendsPanel })))
@@ -53,6 +55,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function MainApp() {
   const { viewMode, isCreateCommunityOpen, closeCreateCommunity, isJoinServerOpen, openJoinServer, closeJoinServer } = useAppStore()
   const [joinInviteCode, setJoinInviteCode] = useState('')
+  const { showTutorial, completeTutorial, skipTutorial } = useTutorial()
 
   useEffect(() => {
     requestNotificationPermission()
@@ -93,6 +96,7 @@ function MainApp() {
       <CreateCommunityModal open={isCreateCommunityOpen} onClose={closeCreateCommunity} />
       <UserProfileModal />
       <ServerSettingsModal />
+      {showTutorial && <TutorialOverlay onComplete={completeTutorial} onSkip={skipTutorial} />}
     </AppLayout>
   )
 }

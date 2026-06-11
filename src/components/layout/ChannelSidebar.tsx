@@ -219,7 +219,7 @@ function DMSidebarContent() {
       )}
 
       {/* DM list */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2 space-y-0.5">
+      <div data-tutorial="dm-list" className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2 space-y-0.5">
         {loading ? (
           <DMSkeleton />
         ) : filtered.length === 0 && !loading ? (

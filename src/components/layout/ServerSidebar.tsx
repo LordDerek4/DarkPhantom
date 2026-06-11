@@ -167,6 +167,7 @@ export function ServerSidebar() {
             <button
               ref={addBtnRef}
               type="button"
+              data-tutorial="add-server"
               onClick={e => {
                 e.stopPropagation()
                 const rect = addBtnRef.current?.getBoundingClientRect()
@@ -203,6 +204,7 @@ export function ServerSidebar() {
             <div className="relative">
               <button
                 type="button"
+                data-tutorial="friends-btn"
                 onClick={() => setViewMode('friends')}
                 className={cn(
                   'w-12 h-12 rounded-3xl hover:bg-pulse-brand hover:rounded-2xl flex items-center justify-center transition-all duration-200 shrink-0',
