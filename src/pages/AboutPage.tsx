@@ -29,7 +29,7 @@ export function AboutPage() {
       </Section>
 
       <Section title="Contact">
-        <P>Got a question, partnership inquiry, or press request? Reach us at <a href="mailto:hello@pulsechat.app" className="text-pulse-brand hover:underline">hello@pulsechat.app</a>.</P>
+        <P>Got a question, partnership inquiry, or press request? Reach us at <a href="mailto:AevixChat@Hotmail.com" className="text-pulse-brand hover:underline">AevixChat@Hotmail.com</a>.</P>
       </Section>
 
       <div className="mt-10 p-5 bg-pulse-brand/10 border border-pulse-brand/20 rounded-2xl">
