@@ -43,7 +43,11 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuth();
       allow create: if isUser(userId);
-      allow update: if isUser(userId);
+      // Premium/billing fields are server-only — clients may not write them directly
+      allow update: if isUser(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'isPremium', 'premiumSince', 'stripeCustomerId', 'stripeSubscriptionId'
+        ]);
       allow delete: if isUser(userId);
     }
 

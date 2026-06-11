@@ -26,6 +26,7 @@ import { IncomingCallNotification } from '@/components/call/IncomingCallNotifica
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel'
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay'
 import { useTutorial } from '@/hooks/useTutorial'
+import { SubscriptionSuccessPage, SubscriptionCancelPage } from '@/pages/SubscriptionSuccessPage'
 
 const DiscoverPage = lazy(() => import('@/components/discover/DiscoverPage').then(m => ({ default: m.DiscoverPage })))
 const FriendsPanel = lazy(() => import('@/components/friends/FriendsPanel').then(m => ({ default: m.FriendsPanel })))
@@ -114,6 +115,9 @@ export default function App() {
         {/* Auth */}
         <Route path="/auth" element={<PublicRoute><AuthPage /></PublicRoute>} />
         <Route path="/invite/:code" element={<InviteRedirect />} />
+        {/* Subscription redirects — must be authenticated */}
+        <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccessPage /></ProtectedRoute>} />
+        <Route path="/subscription/cancel" element={<ProtectedRoute><SubscriptionCancelPage /></ProtectedRoute>} />
         {/* Landing page for unauthenticated visitors */}
         <Route path="/" element={<LandingOrApp />} />
         {/* App — all sub-paths */}

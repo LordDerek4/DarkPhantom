@@ -5,6 +5,9 @@ import {
   User, Bell, Shield, Palette, LogOut, X, Camera, Check,
   Smile, Eye, EyeOff, UserCircle, Settings, Globe, Database,
   ExternalLink, Download, Trash2, BookOpen,
+  Crown, Sparkles, Bot, Rocket, Search, Gift, Star,
+  Image, BadgeCheck, Paintbrush, TrendingUp, FileText,
+  ClipboardList, SearchCheck, Layers, Wand2, Trophy,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,6 +18,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { validateImageFile } from '@/services/storage.service'
 import { updateUserProfile, updateUserStatus } from '@/services/user.service'
 import { updatePresence } from '@/services/presence.service'
+import { startCheckout, openCustomerPortal } from '@/services/premium.service'
 import type { UserStatus } from '@/types'
 import toast from 'react-hot-toast'
 import { cn } from '@/utils/helpers'
@@ -22,10 +26,50 @@ import { cn } from '@/utils/helpers'
 const TABS = [
   { id: 'my-account', label: 'My Account', icon: User },
   { id: 'profile', label: 'Profile', icon: UserCircle },
+  { id: 'premium', label: 'Premium', icon: Crown, highlight: true },
   { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy & Safety', icon: Shield },
   { id: 'data', label: 'Data & Privacy', icon: Database },
+]
+
+const PREMIUM_CATEGORIES = [
+  {
+    icon: Crown,
+    label: 'Enhanced Profiles',
+    color: 'text-yellow-400',
+    perks: ['Animated banners & profile pictures', 'Premium badge', 'Gradient username colours', 'Custom profile themes'],
+  },
+  {
+    icon: Bot,
+    label: 'AI Companion',
+    color: 'text-pulse-brand',
+    perks: ['Summarise conversations', 'Smart reply suggestions', 'Generate announcements', 'Create meeting notes'],
+  },
+  {
+    icon: Rocket,
+    label: 'Server Boosting',
+    color: 'text-purple-400',
+    perks: ['Custom server themes', 'Animated server icons', 'Enhanced discovery', 'Up to 500 members'],
+  },
+  {
+    icon: SearchCheck,
+    label: 'Advanced Search',
+    color: 'text-cyan-400',
+    perks: ['Semantic AI search', 'Cross-server search', 'Natural language queries'],
+  },
+  {
+    icon: Palette,
+    label: 'Exclusive Themes',
+    color: 'text-green-400',
+    perks: ['Theme marketplace', 'Custom colour schemes', 'Animated UI effects'],
+  },
+  {
+    icon: Gift,
+    label: 'Growth Features',
+    color: 'text-pink-400',
+    perks: ['Gift Premium to friends', 'Referral rewards', 'Loyalty badges', 'Streak rewards'],
+  },
 ]
 
 const STATUS_OPTIONS: { value: UserStatus; label: string; color: string; desc: string }[] = [
@@ -51,6 +95,8 @@ export function UserSettings() {
   const [customStatus, setCustomStatus] = useState(user?.customStatus ?? '')
   const [saving, setSaving] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [subscribing, setSubscribing] = useState(false)
+  const [portalLoading, setPortalLoading] = useState(false)
 
   // Sync tab from store
   useEffect(() => { setActiveTab(settingsTab) }, [settingsTab])
@@ -174,12 +220,21 @@ export function UserSettings() {
                   className={cn(
                     'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-sm transition-colors',
                     activeTab === tab.id
-                      ? 'bg-white/10 text-pulse-text-normal font-medium'
-                      : 'text-pulse-text-muted hover:bg-white/5 hover:text-pulse-text-normal'
+                      ? tab.highlight
+                        ? 'bg-yellow-500/15 text-yellow-400 font-medium'
+                        : 'bg-white/10 text-pulse-text-normal font-medium'
+                      : tab.highlight
+                        ? 'text-yellow-400/70 hover:bg-yellow-500/10 hover:text-yellow-400'
+                        : 'text-pulse-text-muted hover:bg-white/5 hover:text-pulse-text-normal'
                   )}
                 >
                   <tab.icon size={16} className="shrink-0" />
                   {tab.label}
+                  {tab.highlight && (
+                    <span className="ml-auto text-[10px] font-bold bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded-full">
+                      NEW
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -269,7 +324,14 @@ export function UserSettings() {
                       </button>
                     </div>
 
-                    <h3 className="text-lg font-bold text-white">{user.displayName}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-white">{user.displayName}</h3>
+                      {user.isPremium && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-[10px] font-bold text-yellow-400">
+                          <Crown size={9} /> Premium
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-pulse-text-muted">@{user.username}</p>
                     {user.customStatus && (
                       <p className="text-xs text-pulse-text-muted mt-1">{user.customStatus}</p>
@@ -514,6 +576,130 @@ export function UserSettings() {
                     </button>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* ── Premium ── */}
+            {activeTab === 'premium' && user && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-bold text-white">Premium</h2>
+                  {user.isPremium && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs font-bold text-yellow-400">
+                      <Crown size={11} /> Active
+                    </span>
+                  )}
+                </div>
+
+                {user.isPremium ? (
+                  /* ── Active subscriber ── */
+                  <div className="space-y-5">
+                    <div className="rounded-2xl bg-gradient-to-br from-yellow-500/15 via-orange-500/10 to-pulse-brand/10 border border-yellow-500/30 p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/30">
+                          <Crown size={22} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-white text-base">AevixChat Premium</p>
+                          <p className="text-sm text-yellow-400/80">£3.99/month · Active</p>
+                        </div>
+                      </div>
+                      {user.premiumSince && (
+                        <p className="text-xs text-pulse-text-muted mb-4">
+                          Member since {user.premiumSince.toDate().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      )}
+                      <button
+                        onClick={async () => {
+                          setPortalLoading(true)
+                          try { await openCustomerPortal() }
+                          catch { toast.error('Failed to open billing portal') }
+                          finally { setPortalLoading(false) }
+                        }}
+                        disabled={portalLoading}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60"
+                      >
+                        {portalLoading
+                          ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          : <ExternalLink size={14} />}
+                        Manage Subscription
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {PREMIUM_CATEGORIES.map(cat => (
+                        <div key={cat.label} className="bg-pulse-bg-primary rounded-xl border border-white/5 p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <cat.icon size={15} className={cn(cat.color, 'shrink-0')} />
+                            <p className="text-sm font-semibold text-white">{cat.label}</p>
+                            <Check size={12} className="ml-auto text-green-400 shrink-0" />
+                          </div>
+                          <ul className="space-y-1.5">
+                            {cat.perks.map(p => (
+                              <li key={p} className="text-xs text-pulse-text-muted flex items-center gap-1.5">
+                                <span className={cn('w-1 h-1 rounded-full shrink-0', cat.color.replace('text-', 'bg-'))} />
+                                {p}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Upgrade CTA ── */
+                  <div className="space-y-5">
+                    <div className="rounded-2xl bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-pulse-brand/10 border border-yellow-500/20 p-6">
+                      <div className="flex items-start gap-4 mb-5">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/30 shrink-0">
+                          <Crown size={22} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-white text-base mb-0.5">Upgrade to Premium</p>
+                          <div className="flex items-end gap-1">
+                            <span className="text-2xl font-black text-white">£3.99</span>
+                            <span className="text-pulse-text-muted text-sm mb-0.5">/month</span>
+                          </div>
+                          <p className="text-xs text-pulse-text-muted mt-0.5">Cancel anytime · No lock-in</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          setSubscribing(true)
+                          try { await startCheckout() }
+                          catch { toast.error('Could not start checkout. Please try again.') }
+                          finally { setSubscribing(false) }
+                        }}
+                        disabled={subscribing}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:opacity-60 text-white font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-yellow-500/20"
+                      >
+                        {subscribing
+                          ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          : <Crown size={16} />}
+                        {subscribing ? 'Opening checkout...' : 'Subscribe — £3.99/month'}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {PREMIUM_CATEGORIES.map(cat => (
+                        <div key={cat.label} className="bg-pulse-bg-primary rounded-xl border border-white/5 p-4 opacity-80">
+                          <div className="flex items-center gap-2 mb-3">
+                            <cat.icon size={15} className={cn(cat.color, 'shrink-0')} />
+                            <p className="text-sm font-semibold text-white">{cat.label}</p>
+                          </div>
+                          <ul className="space-y-1.5">
+                            {cat.perks.map(p => (
+                              <li key={p} className="text-xs text-pulse-text-muted flex items-center gap-1.5">
+                                <span className="w-1 h-1 rounded-full bg-white/20 shrink-0" />
+                                {p}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

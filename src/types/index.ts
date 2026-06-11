@@ -20,6 +20,10 @@ export interface User {
   blockedIds: string[]
   notificationSettings: NotificationSettings
   themePreference: 'dark' | 'light' | 'system'
+  isPremium?: boolean
+  premiumSince?: import('firebase/firestore').Timestamp | null
+  stripeCustomerId?: string | null
+  stripeSubscriptionId?: string | null
 }
 
 export interface NotificationSettings {
