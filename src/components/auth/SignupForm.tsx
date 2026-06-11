@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { Mail, Lock, User, AtSign, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
+import { Turnstile } from '@marsidev/react-turnstile'
+import type { TurnstileInstance } from '@marsidev/react-turnstile'
 
 interface SignupFormData {
   email: string
@@ -23,11 +25,17 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileInstance>(null)
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<SignupFormData>()
   const password = watch('password')
 
   const onSubmit = async (data: SignupFormData) => {
+    if (!turnstileToken) {
+      toast.error('Please complete the human verification.')
+      return
+    }
     setLoading(true)
     try {
       await signUp(data.email, data.password, data.username, data.displayName)
@@ -38,6 +46,8 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         ? 'An account with that email already exists'
         : error.message ?? 'Failed to create account'
       toast.error(message)
+      turnstileRef.current?.reset()
+      setTurnstileToken(null)
     } finally {
       setLoading(false)
     }
@@ -139,7 +149,18 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           <span className="text-pulse-brand cursor-pointer hover:underline">Privacy Policy</span>.
         </p>
 
-        <Button type="submit" className="w-full" size="lg" loading={loading}>
+        <div className="flex justify-center">
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+            onSuccess={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+            options={{ theme: 'dark', size: 'normal' }}
+          />
+        </div>
+
+        <Button type="submit" className="w-full" size="lg" loading={loading} disabled={!turnstileToken}>
           Continue
         </Button>
       </form>

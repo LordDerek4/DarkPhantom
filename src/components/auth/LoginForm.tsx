@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
+import { Turnstile } from '@marsidev/react-turnstile'
+import type { TurnstileInstance } from '@marsidev/react-turnstile'
 
 interface LoginFormData {
   email: string
@@ -20,10 +22,16 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileInstance>(null)
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>()
 
   const onSubmit = async (data: LoginFormData) => {
+    if (!turnstileToken) {
+      toast.error('Please complete the human verification.')
+      return
+    }
     setLoading(true)
     try {
       await signIn(data.email, data.password)
@@ -34,6 +42,8 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         ? 'Invalid email or password'
         : error.message ?? 'Failed to sign in'
       toast.error(message)
+      turnstileRef.current?.reset()
+      setTurnstileToken(null)
     } finally {
       setLoading(false)
     }
@@ -93,7 +103,18 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           Forgot your password?
         </button>
 
-        <Button type="submit" className="w-full" size="lg" loading={loading}>
+        <div className="flex justify-center">
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+            onSuccess={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+            options={{ theme: 'dark', size: 'normal' }}
+          />
+        </div>
+
+        <Button type="submit" className="w-full" size="lg" loading={loading} disabled={!turnstileToken}>
           Log In
         </Button>
       </form>
