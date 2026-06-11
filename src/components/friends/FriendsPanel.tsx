@@ -220,7 +220,7 @@ export function FriendsPanel() {
           <div className="p-4 max-w-lg">
             <h3 className="font-bold text-pulse-text-normal text-base mb-1">Add Friend</h3>
             <p className="text-sm text-pulse-text-muted mb-4">
-              You can add friends by their PulseChat username.
+              You can add friends by their AevixChat username.
             </p>
 
             {/* Search input */}

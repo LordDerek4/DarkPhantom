@@ -21,9 +21,9 @@ export default {
             input: '#1e1f22',
           },
           brand: {
-            DEFAULT: '#5865f2',
-            hover: '#4752c4',
-            dim: '#3c45a5',
+            DEFAULT: '#ef4444',
+            hover: '#dc2626',
+            dim: '#b91c1c',
           },
           text: {
             normal: '#dbdee1',

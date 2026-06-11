@@ -37,7 +37,7 @@ export function AppLogo({ size = 32, showText = true, textClassName, className }
       </svg>
       {showText && (
         <span className={cn('font-bold text-white', textClassName ?? 'text-lg')}>
-          PulseChat
+          AevixChat
         </span>
       )}
     </div>

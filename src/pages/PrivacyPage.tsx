@@ -9,8 +9,8 @@ export function PrivacyPage() {
       <p className="text-xs text-pulse-text-muted mb-8">Effective date: {EFFECTIVE_DATE}</p>
 
       <Section title="1. Introduction">
-        <P>PulseChat ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use our platform.</P>
-        <P>By using PulseChat, you agree to the collection and use of information in accordance with this policy.</P>
+        <P>AevixChat ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use our platform.</P>
+        <P>By using AevixChat, you agree to the collection and use of information in accordance with this policy.</P>
       </Section>
 
       <Section title="2. Information We Collect">
@@ -34,7 +34,7 @@ export function PrivacyPage() {
       <Section title="3. How We Use Your Information">
         <P>We use the information we collect to:</P>
         <UL items={[
-          'Provide, operate, and maintain the PulseChat service',
+          'Provide, operate, and maintain the AevixChat service',
           'Authenticate your identity and secure your account',
           'Enable messaging and community features',
           'Display your profile and presence to other users',
@@ -78,15 +78,15 @@ export function PrivacyPage() {
       </Section>
 
       <Section title="8. Cookies">
-        <P>PulseChat uses minimal cookies and local storage solely for authentication and session management. We do not use tracking or advertising cookies.</P>
+        <P>AevixChat uses minimal cookies and local storage solely for authentication and session management. We do not use tracking or advertising cookies.</P>
       </Section>
 
       <Section title="9. Children's Privacy">
-        <P>PulseChat is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, please contact us.</P>
+        <P>AevixChat is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, please contact us.</P>
       </Section>
 
       <Section title="10. Changes to This Policy">
-        <P>We may update this Privacy Policy from time to time. We will notify users of significant changes via email or an in-app notice. Continued use of PulseChat after changes constitutes acceptance of the updated policy.</P>
+        <P>We may update this Privacy Policy from time to time. We will notify users of significant changes via email or an in-app notice. Continued use of AevixChat after changes constitutes acceptance of the updated policy.</P>
       </Section>
 
       <Section title="11. Contact">

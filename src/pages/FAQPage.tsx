@@ -7,9 +7,9 @@ const FAQS = [
   {
     section: 'Getting Started',
     items: [
-      { q: 'Is PulseChat free?', a: 'Yes! PulseChat is completely free to use. You can create unlimited servers, send unlimited messages, and join unlimited communities at no cost. A Pro tier with extra features is coming soon.' },
+      { q: 'Is AevixChat free?', a: 'Yes! AevixChat is completely free to use. You can create unlimited servers, send unlimited messages, and join unlimited communities at no cost. A Pro tier with extra features is coming soon.' },
       { q: 'How do I create an account?', a: 'Click "Get Started" on the homepage and sign up with your email address. You\'ll choose a username and can customise your profile right away.' },
-      { q: 'Can I use PulseChat on mobile?', a: 'PulseChat works in any modern browser on mobile. A native mobile app is on our roadmap.' },
+      { q: 'Can I use AevixChat on mobile?', a: 'AevixChat works in any modern browser on mobile. A native mobile app is on our roadmap.' },
       { q: 'How do I create a server?', a: 'Once signed in, click the + button in the left sidebar and choose "Create a Community". Pick a template or start from scratch, name your server, and invite people with a unique code.' },
     ],
   },
@@ -37,7 +37,7 @@ const FAQS = [
       { q: 'How do I change my username or avatar?', a: 'Click the settings cog near your avatar at the bottom of the sidebar, go to "My Account" or "Profile" to update your details.' },
       { q: 'How do I delete my account?', a: 'Go to Settings → Privacy & Safety → Danger Zone and click "Delete Account". This is permanent and cannot be undone.' },
       { q: 'Who can see my messages?', a: 'In a server, all members of that server can see messages in text channels. Direct messages are only visible to the participants.' },
-      { q: 'Does PulseChat sell my data?', a: 'No. We never sell your personal data. See our Privacy Policy for full details on how we handle your information.' },
+      { q: 'Does AevixChat sell my data?', a: 'No. We never sell your personal data. See our Privacy Policy for full details on how we handle your information.' },
     ],
   },
 ]

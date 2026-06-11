@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { AppLogo } from '@/components/ui/AppLogo'
 
 const DOCS_LINKS = [
-  { href: '/about', label: 'About PulseChat' },
+  { href: '/about', label: 'About AevixChat' },
   { href: '/support', label: 'Support' },
   { href: '/faq', label: 'FAQ' },
   { href: '/privacy', label: 'Privacy Policy' },
@@ -59,7 +59,7 @@ export function DocsLayout({ children, title }: { children: React.ReactNode; tit
 
       <footer className="border-t border-white/5 py-8 mt-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-pulse-text-muted">© {new Date().getFullYear()} PulseChat. All rights reserved.</p>
+          <p className="text-xs text-pulse-text-muted">© {new Date().getFullYear()} AevixChat. All rights reserved.</p>
           <div className="flex items-center gap-4">
             {DOCS_LINKS.map(l => (
               <Link key={l.href} to={l.href} className="text-xs text-pulse-text-muted hover:text-white transition-colors">{l.label}</Link>

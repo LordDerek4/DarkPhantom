@@ -92,7 +92,7 @@ export function CreateServerModal({ open, onClose }: CreateServerModalProps) {
         />
 
         <p className="text-xs text-pulse-text-muted">
-          By creating a server, you agree to PulseChat's Community Guidelines.
+          By creating a server, you agree to AevixChat's Community Guidelines.
         </p>
 
         <div className="flex gap-3 justify-end">

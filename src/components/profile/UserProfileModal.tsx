@@ -206,7 +206,7 @@ export function UserProfileModal() {
                 style={{
                   background: profile.bannerUrl
                     ? undefined
-                    : `linear-gradient(135deg, #5865f2, #eb459e)`,
+                    : `linear-gradient(135deg, #ef4444, #eb459e)`,
                 }}
               >
                 {profile.bannerUrl && (

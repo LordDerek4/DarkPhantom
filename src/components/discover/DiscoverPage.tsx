@@ -19,7 +19,7 @@ function ServerCard({ server, onJoin }: { server: ServerListing; onJoin: (server
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
         </div>
       ) : (
-        <div className="h-20 bg-gradient-to-br from-pulse-brand/30 to-purple-500/30" />
+        <div className="h-20 bg-gradient-to-br from-pulse-brand/30 to-red-500/30" />
       )}
 
       <div className="p-3 pt-0 -mt-5 relative">

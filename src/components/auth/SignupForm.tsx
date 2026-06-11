@@ -39,7 +39,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     setLoading(true)
     try {
       await signUp(data.email, data.password, data.username, data.displayName)
-      toast.success('Account created! Welcome to PulseChat!')
+      toast.success('Account created! Welcome to AevixChat!')
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string }
       const message = error.code === 'auth/email-already-in-use'
@@ -57,7 +57,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     setGoogleLoading(true)
     try {
       await googleSignIn()
-      toast.success('Welcome to PulseChat!')
+      toast.success('Welcome to AevixChat!')
     } catch (err: unknown) {
       const error = err as { message?: string }
       toast.error(error.message ?? 'Google sign-in failed')
@@ -143,7 +143,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         />
 
         <p className="text-xs text-pulse-text-muted">
-          By registering, you agree to PulseChat's{' '}
+          By registering, you agree to AevixChat's{' '}
           <span className="text-pulse-brand cursor-pointer hover:underline">Terms of Service</span>{' '}
           and{' '}
           <span className="text-pulse-brand cursor-pointer hover:underline">Privacy Policy</span>.

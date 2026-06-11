@@ -225,7 +225,7 @@ export function UserSettings() {
                     style={{
                       background: user.bannerUrl
                         ? undefined
-                        : 'linear-gradient(135deg, #5865f2, #eb459e)',
+                        : 'linear-gradient(135deg, #ef4444, #eb459e)',
                     }}
                   >
                     <input {...getBannerInputProps()} />
@@ -322,7 +322,7 @@ export function UserSettings() {
                 <div className="rounded-xl overflow-hidden border border-white/10">
                   <div
                     className="h-20 relative"
-                    style={{ background: 'linear-gradient(135deg, #5865f2, #eb459e)' }}
+                    style={{ background: 'linear-gradient(135deg, #ef4444, #eb459e)' }}
                   >
                     {user.bannerUrl && <img src={user.bannerUrl} alt="" className="w-full h-full object-cover" />}
                   </div>
@@ -448,7 +448,7 @@ export function UserSettings() {
                         isBannerDrag ? 'border-pulse-brand' : 'border-white/10 hover:border-white/20'
                       )}
                       style={{
-                        background: user.bannerUrl ? undefined : 'linear-gradient(135deg, #5865f2, #eb459e)',
+                        background: user.bannerUrl ? undefined : 'linear-gradient(135deg, #ef4444, #eb459e)',
                       }}
                     >
                       <input {...getBannerInputProps()} />
@@ -585,7 +585,7 @@ export function UserSettings() {
                   <h3 className="text-xs font-bold uppercase tracking-wide text-pulse-text-muted px-4 py-3">Legal Documents</h3>
                   {[
                     { label: 'Privacy Policy', href: '/privacy', desc: 'How we collect, use, and protect your data' },
-                    { label: 'Terms of Service', href: '/terms', desc: 'Rules and guidelines for using PulseChat' },
+                    { label: 'Terms of Service', href: '/terms', desc: 'Rules and guidelines for using AevixChat' },
                   ].map(doc => (
                     <Link
                       key={doc.href}

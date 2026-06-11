@@ -43,7 +43,7 @@ export function SupportPage() {
       <Section title="Useful links">
         <UL items={[
           'Check our FAQ for instant answers to common questions',
-          'Read the Terms of Service to understand how PulseChat works',
+          'Read the Terms of Service to understand how AevixChat works',
           'Review our Privacy Policy to understand how we handle your data',
         ]} />
         <div className="flex flex-wrap gap-3 mt-4">

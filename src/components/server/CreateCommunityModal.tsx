@@ -26,7 +26,7 @@ const TEMPLATES = [
   {
     id: 'gaming', label: 'Gaming', icon: '🎮',
     description: 'Tournaments, voice channels, and game discussion',
-    color: '#5865f2',
+    color: '#ef4444',
     channels: ['general', 'looking-for-group', 'game-clips', 'strategy', 'off-topic'],
     features: ['voice', 'events', 'leaderboard'],
     rules: ['Be respectful to all members', 'No cheating or exploits', 'Keep spoilers tagged', 'English only in main channels'],
@@ -90,7 +90,7 @@ const TEMPLATES = [
   {
     id: 'custom', label: 'Custom', icon: '✨',
     description: 'Build from scratch with full control',
-    color: '#5865f2',
+    color: '#ef4444',
     channels: ['general'],
     features: [],
     rules: ['Be respectful', 'Follow the rules', 'Have fun'],
@@ -114,7 +114,7 @@ const VERIFICATION_LEVELS = [
 ]
 
 const ACCENT_COLORS = [
-  '#5865f2', '#eb459e', '#3ba55c', '#faa61a',
+  '#ef4444', '#eb459e', '#3ba55c', '#faa61a',
   '#ed4245', '#00b0f4', '#9b59b6', '#e67e22',
   '#1abc9c', '#e74c3c', '#3498db', '#f39c12',
 ]
@@ -158,7 +158,7 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     template: '',
     name: '',
     description: '',
-    accentColor: '#5865f2',
+    accentColor: '#ef4444',
     privacy: 'public',
     verificationLevel: 'none',
     ageRestricted: false,
@@ -225,7 +225,7 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     setStep('template')
     setMode('create')
     setForm({
-      template: '', name: '', description: '', accentColor: '#5865f2',
+      template: '', name: '', description: '', accentColor: '#ef4444',
       privacy: 'public', verificationLevel: 'none', ageRestricted: false,
       features: [], channels: ['general'],
       rules: ['Be respectful to all members', 'No harassment or hate speech'],
@@ -573,7 +573,7 @@ function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: string) => 
                 <div className="h-16 relative">
                   {server.bannerUrl
                     ? <img src={server.bannerUrl} alt="" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full bg-gradient-to-br from-pulse-brand/25 to-purple-600/15" />
+                    : <div className="w-full h-full bg-gradient-to-br from-pulse-brand/25 to-red-600/15" />
                   }
                 </div>
 

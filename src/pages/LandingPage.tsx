@@ -26,8 +26,8 @@ const FEATURES = [
     icon: Users,
     title: 'Communities',
     desc: 'Build your own server with custom channels, roles, and invite codes for your community.',
-    color: 'from-purple-500/20 to-pink-500/10',
-    iconColor: 'text-purple-400',
+    color: 'from-red-500/20 to-pink-500/10',
+    iconColor: 'text-red-400',
   },
   {
     icon: Compass,
@@ -161,7 +161,7 @@ function Footer() {
         </div>
 
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-pulse-text-muted">© {new Date().getFullYear()} PulseChat. All rights reserved.</p>
+          <p className="text-xs text-pulse-text-muted">© {new Date().getFullYear()} AevixChat. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="text-xs text-pulse-text-muted hover:text-white transition-colors">Privacy</Link>
             <Link to="/terms" className="text-xs text-pulse-text-muted hover:text-white transition-colors">Terms</Link>
@@ -180,7 +180,7 @@ export function LandingPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-20 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-pulse-brand/10 via-transparent to-purple-500/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-pulse-brand/10 via-transparent to-red-500/5 pointer-events-none" />
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pulse-brand/5 blur-3xl pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center relative">
@@ -196,13 +196,13 @@ export function LandingPage() {
 
             <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] mb-6">
               Your community,<br />
-              <span className="bg-gradient-to-r from-pulse-brand via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-pulse-brand via-red-400 to-orange-400 bg-clip-text text-transparent">
                 your way.
               </span>
             </h1>
 
             <p className="text-lg md:text-xl text-pulse-text-muted max-w-2xl mx-auto mb-10 leading-relaxed">
-              PulseChat brings your friends, communities, and conversations together in one beautiful, fast, and free platform.
+              AevixChat brings your friends, communities, and conversations together in one beautiful, fast, and free platform.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -236,7 +236,7 @@ export function LandingPage() {
                 <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <div className="w-3 h-3 rounded-full bg-green-500/60" />
               </div>
-              <div className="flex-1 text-center text-xs text-pulse-text-muted">pulsechat.app</div>
+              <div className="flex-1 text-center text-xs text-pulse-text-muted">aevixchat.com</div>
             </div>
             <div className="flex h-52 md:h-72">
               <div className="w-14 bg-pulse-bg-primary flex flex-col items-center gap-2 py-3">
@@ -259,7 +259,7 @@ export function LandingPage() {
               <div className="flex-1 px-4 py-4 flex flex-col gap-3 overflow-hidden">
                 {[
                   { name: 'Alex', msg: 'Hey everyone! 👋', time: '2:34 PM' },
-                  { name: 'Jordan', msg: 'Welcome to PulseChat!', time: '2:35 PM' },
+                  { name: 'Jordan', msg: 'Welcome to AevixChat!', time: '2:35 PM' },
                   { name: 'Sam', msg: 'This is so clean 🔥', time: '2:36 PM' },
                 ].map((m, i) => (
                   <div key={i} className="flex items-start gap-2.5">
@@ -317,7 +317,7 @@ export function LandingPage() {
           </div>
 
           <div className="rounded-2xl bg-pulse-brand/10 border border-pulse-brand/40 p-8 text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-pulse-brand/10 via-transparent to-purple-500/10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-pulse-brand/10 via-transparent to-red-500/10 pointer-events-none" />
             <div className="relative">
               <p className="text-xs font-bold uppercase tracking-widest text-pulse-brand mb-3">Full Access</p>
               <div className="flex items-end justify-center gap-1.5 mb-1">

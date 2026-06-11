@@ -52,7 +52,7 @@ export function HomeScreen() {
             icon={<MessageSquare size={22} />}
             title="Direct Messages"
             description="Chat with friends"
-            color="from-pulse-brand to-purple-600"
+            color="from-pulse-brand to-red-600"
             onClick={() => setViewMode('dm')}
           />
           <QuickAction
@@ -180,7 +180,7 @@ export function HomeScreen() {
                   <div className="h-14 relative">
                     {server.bannerUrl
                       ? <img src={server.bannerUrl} alt="" className="w-full h-full object-cover" />
-                      : <div className="w-full h-full bg-gradient-to-br from-pulse-brand/30 to-purple-600/20" />
+                      : <div className="w-full h-full bg-gradient-to-br from-pulse-brand/30 to-red-600/20" />
                     }
                   </div>
                   <div className="p-3 -mt-4 relative flex items-end gap-2">

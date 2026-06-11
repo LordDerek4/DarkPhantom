@@ -95,7 +95,7 @@ export function AIAssistant({ channelId, serverId, onClose }: AIAssistantProps) 
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-black/20 shrink-0">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pulse-brand to-purple-500 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pulse-brand to-red-500 flex items-center justify-center">
           <Sparkles size={14} className="text-white" />
         </div>
         <div className="flex-1 min-w-0">
@@ -111,10 +111,10 @@ export function AIAssistant({ channelId, serverId, onClose }: AIAssistantProps) 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
         {messages.length === 0 && (
           <div className="text-center py-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pulse-brand/20 to-purple-500/20 flex items-center justify-center mx-auto mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pulse-brand/20 to-red-500/20 flex items-center justify-center mx-auto mb-3">
               <Bot size={24} className="text-pulse-brand" />
             </div>
-            <p className="text-sm font-medium text-pulse-text-normal">PulseChat AI</p>
+            <p className="text-sm font-medium text-pulse-text-normal">AevixChat AI</p>
             <p className="text-xs text-pulse-text-muted mt-1">Ask me anything about this server</p>
             <div className="grid grid-cols-2 gap-2 mt-4">
               {COMMANDS.map(c => (
@@ -134,7 +134,7 @@ export function AIAssistant({ channelId, serverId, onClose }: AIAssistantProps) 
         {messages.map(msg => (
           <div key={msg.id} className={cn('flex gap-2', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
             {msg.role === 'assistant' && (
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pulse-brand to-purple-500 flex items-center justify-center shrink-0 mt-1">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pulse-brand to-red-500 flex items-center justify-center shrink-0 mt-1">
                 <Sparkles size={10} className="text-white" />
               </div>
             )}
@@ -154,7 +154,7 @@ export function AIAssistant({ channelId, serverId, onClose }: AIAssistantProps) 
 
         {loading && (
           <div className="flex gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pulse-brand to-purple-500 flex items-center justify-center shrink-0">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pulse-brand to-red-500 flex items-center justify-center shrink-0">
               <Sparkles size={10} className="text-white" />
             </div>
             <div className="px-3 py-2 rounded-xl bg-pulse-bg-primary flex items-center gap-1">
