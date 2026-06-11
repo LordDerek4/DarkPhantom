@@ -17,7 +17,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { activeServerId, isMemberListOpen, viewMode, openPanel, closePanel, activeChannelId } = useAppStore()
+  const { activeServerId, isMemberListOpen, viewMode, openPanel, closePanel, activeChannelId, isMobileSidebarOpen, closeMobileSidebar } = useAppStore()
   const { members } = useServerDetails(activeServerId)
 
   const memberIds = members.map(m => m.userId)
@@ -27,14 +27,28 @@ export function AppLayout({ children }: AppLayoutProps) {
   const showChannelSidebar = viewMode !== 'discover' && viewMode !== 'friends'
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-pulse-bg-primary text-pulse-text-normal">
-      <ServerSidebar />
-      {showChannelSidebar && <ChannelSidebar />}
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-pulse-bg-primary text-pulse-text-normal">
+      {/* Desktop sidebars */}
+      <div className="hidden md:flex shrink-0">
+        <ServerSidebar />
+        {showChannelSidebar && <ChannelSidebar />}
+      </div>
+
+      {/* Mobile sidebar drawer */}
+      {isMobileSidebarOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex" onClick={closeMobileSidebar}>
+          <div className="flex h-full shrink-0 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <ServerSidebar />
+            {showChannelSidebar && <ChannelSidebar />}
+          </div>
+          <div className="flex-1 bg-black/60 backdrop-blur-sm" />
+        </div>
+      )}
 
       <div className="flex flex-col flex-1 min-w-0 bg-pulse-bg-tertiary">
         <TopBar />
         <div className="flex flex-1 min-h-0">
-          <main className="flex-1 min-w-0 flex flex-col">
+          <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
             {children}
           </main>
 

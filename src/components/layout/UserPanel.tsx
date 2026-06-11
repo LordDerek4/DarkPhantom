@@ -6,8 +6,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAppStore } from '@/store/useAppStore'
 import { Avatar } from '@/components/ui/Avatar'
 import { Tooltip } from '@/components/ui/Tooltip'
-import { updateUserProfile } from '@/services/user.service'
-import { updateUserStatus } from '@/services/user.service'
+import { updateUserProfile, updateUserStatus } from '@/services/user.service'
+import { updatePresence } from '@/services/presence.service'
 import type { UserStatus } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -53,7 +53,10 @@ export function UserPanel() {
 
   const handleStatusChange = async (status: UserStatus) => {
     try {
-      await updateUserStatus(user.uid, status)
+      await Promise.all([
+        updateUserStatus(user.uid, status),
+        updatePresence(user.uid, status),
+      ])
     } catch {
       toast.error('Failed to update status')
     }

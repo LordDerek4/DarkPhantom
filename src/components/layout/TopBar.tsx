@@ -1,5 +1,5 @@
 import React from 'react'
-import { Hash, Megaphone, Bell, Pin, Search, Users, HelpCircle, Inbox, ChevronLeft, ChevronRight, Sparkles, MessageSquare, BarChart2, Calendar } from 'lucide-react'
+import { Hash, Megaphone, Bell, Pin, Search, Users, HelpCircle, Inbox, ChevronLeft, ChevronRight, Sparkles, MessageSquare, BarChart2, Calendar, Menu } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
 import { useServerDetails } from '@/hooks/useServer'
@@ -22,7 +22,17 @@ export function TopBar() {
     navFuture,
     goBack,
     goForward,
+    openMobileSidebar,
   } = useAppStore()
+
+  const MobileMenuBtn = () => (
+    <button
+      onClick={openMobileSidebar}
+      className="md:hidden p-1.5 rounded text-pulse-text-muted hover:text-white hover:bg-white/10 transition-colors mr-1 shrink-0"
+    >
+      <Menu size={20} />
+    </button>
+  )
 
   const canGoBack = navHistory.length > 0
   const canGoForward = navFuture.length > 0
@@ -69,6 +79,7 @@ export function TopBar() {
   if (viewMode === 'dm' && dmPartner) {
     return (
       <header className="h-12 flex items-center px-4 gap-3 border-b border-black/20 bg-pulse-bg-tertiary shrink-0 shadow-elevation-low">
+        <MobileMenuBtn />
         <NavButtons />
         <Avatar src={dmPartner.avatarUrl} name={dmPartner.displayName} userId={dmPartner.uid} size="sm" showStatus />
         <span className="font-semibold text-pulse-text-normal">{dmPartner.displayName}</span>
@@ -84,6 +95,7 @@ export function TopBar() {
   if (!activeChannel) {
     return (
       <header className="h-12 flex items-center px-4 gap-2 border-b border-black/20 bg-pulse-bg-tertiary shrink-0 shadow-elevation-low">
+        <MobileMenuBtn />
         <NavButtons />
         <span className="text-pulse-text-muted text-sm">Select a channel</span>
         <div className="ml-auto flex items-center gap-1">
@@ -95,6 +107,7 @@ export function TopBar() {
 
   return (
     <header className="h-12 flex items-center px-4 gap-2 border-b border-black/20 bg-pulse-bg-tertiary shrink-0 shadow-elevation-low">
+      <MobileMenuBtn />
       <NavButtons />
       {activeChannel.type === 'announcement' ? (
         <Megaphone size={20} className="text-pulse-text-muted shrink-0" />

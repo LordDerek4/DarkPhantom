@@ -11,8 +11,9 @@ import {
   respondToFriendRequest, cancelFriendRequest, getMutualFriends, getFriendUserId,
   subscribeToFriendships, getFriendshipStatus,
 } from '@/services/friends.service'
+import { subscribeToPresence } from '@/services/presence.service'
 import { useDMChannels } from '@/hooks/useDirectMessages'
-import type { User } from '@/types'
+import type { User, UserStatus } from '@/types'
 import type { Friendship } from '@/types/extended'
 import toast from 'react-hot-toast'
 
@@ -44,6 +45,15 @@ export function UserProfileModal() {
 
   const isOwnProfile = userProfileId === currentUser?.uid
   const open = !!userProfileId
+
+  // Reactively subscribe to this user's presence whenever the modal opens
+  const presence = useAppStore(s => s.presences[userProfileId ?? ''] ?? 'offline')
+  const setPresences = useAppStore(s => s.setPresences)
+  useEffect(() => {
+    if (!userProfileId) return
+    const unsub = subscribeToPresence([userProfileId], p => setPresences(p as Record<string, UserStatus>))
+    return () => unsub()
+  }, [userProfileId])
 
   // Load profile
   useEffect(() => {
@@ -151,7 +161,7 @@ export function UserProfileModal() {
     ? new Date((profile.createdAt as unknown as { seconds: number }).seconds * 1000)
     : null
 
-  const presence = useAppStore.getState().presences[userProfileId ?? ''] ?? 'offline'
+  // presence is now declared above with reactive subscription
 
   if (!open) return null
 

@@ -51,6 +51,7 @@ interface AppState {
   openPanel: 'threads' | 'ai' | 'analytics' | 'events' | null
   isCreateCommunityOpen: boolean
   isJoinServerOpen: boolean
+  isMobileSidebarOpen: boolean
 
   // Online presence
   presences: Record<string, 'online' | 'idle' | 'dnd' | 'offline'>
@@ -124,6 +125,8 @@ interface AppActions {
   closeCreateCommunity: () => void
   openJoinServer: () => void
   closeJoinServer: () => void
+  openMobileSidebar: () => void
+  closeMobileSidebar: () => void
 
   // Presence
   setPresence: (userId: string, status: 'online' | 'idle' | 'dnd' | 'offline') => void
@@ -153,6 +156,7 @@ export const useAppStore = create<AppState & AppActions>()(
     openPanel: null,
     isCreateCommunityOpen: false,
     isJoinServerOpen: false,
+    isMobileSidebarOpen: false,
     isSearchOpen: false,
     isSettingsOpen: false,
     settingsTab: 'my-account',
@@ -165,11 +169,11 @@ export const useAppStore = create<AppState & AppActions>()(
     setActiveServer: serverId => set({ activeServerId: serverId, activeChannelId: null }),
     setActiveChannel: channelId => set(s => {
       const current: NavEntry = { viewMode: s.viewMode, activeServerId: s.activeServerId, activeChannelId: s.activeChannelId, activeDMChannelId: s.activeDMChannelId }
-      return { activeChannelId: channelId, activeDMChannelId: null, viewMode: 'server', navHistory: [...s.navHistory, current].slice(-50), navFuture: [] }
+      return { activeChannelId: channelId, activeDMChannelId: null, viewMode: 'server', isMobileSidebarOpen: false, navHistory: [...s.navHistory, current].slice(-50), navFuture: [] }
     }),
     setActiveDMChannel: dmChannelId => set(s => {
       const current: NavEntry = { viewMode: s.viewMode, activeServerId: s.activeServerId, activeChannelId: s.activeChannelId, activeDMChannelId: s.activeDMChannelId }
-      return { activeDMChannelId: dmChannelId, activeChannelId: null, viewMode: 'dm', navHistory: [...s.navHistory, current].slice(-50), navFuture: [] }
+      return { activeDMChannelId: dmChannelId, activeChannelId: null, viewMode: 'dm', isMobileSidebarOpen: false, navHistory: [...s.navHistory, current].slice(-50), navFuture: [] }
     }),
     setViewMode: mode => set(s => {
       const current: NavEntry = { viewMode: s.viewMode, activeServerId: s.activeServerId, activeChannelId: s.activeChannelId, activeDMChannelId: s.activeDMChannelId }
@@ -330,6 +334,8 @@ export const useAppStore = create<AppState & AppActions>()(
     closeCreateCommunity: () => set({ isCreateCommunityOpen: false }),
     openJoinServer: () => set({ isJoinServerOpen: true }),
     closeJoinServer: () => set({ isJoinServerOpen: false }),
+    openMobileSidebar: () => set({ isMobileSidebarOpen: true }),
+    closeMobileSidebar: () => set({ isMobileSidebarOpen: false }),
 
     // Presence
     setPresence: (userId, status) =>
