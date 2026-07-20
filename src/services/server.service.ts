@@ -197,6 +197,8 @@ export async function joinServer(userId: string, inviteCode: string): Promise<Se
   )
   const everyoneRoleId = rolesSnap.docs[0]?.id ?? `${invite.serverId}_everyone`
 
+  // Batch 1: member + userServers + invite use count. None of these rules call
+  // get()/exists(), so they don't depend on the new membership already existing.
   const batch = writeBatch(db)
 
   batch.set(memberRef, {
@@ -211,10 +213,6 @@ export async function joinServer(userId: string, inviteCode: string): Promise<Se
     isDeafened: false,
   })
 
-  batch.update(doc(db, COLLECTIONS.SERVERS, invite.serverId), {
-    memberCount: increment(1),
-  })
-
   batch.update(inviteDoc.ref, { uses: increment(1) })
 
   batch.set(doc(db, 'userServers', `${userId}_${invite.serverId}`), {
@@ -224,6 +222,14 @@ export async function joinServer(userId: string, inviteCode: string): Promise<Se
   })
 
   await batch.commit()
+
+  // Step 2: bump memberCount separately — the servers/{id} update rule requires
+  // isMember(serverId), which only becomes true once the membership doc above
+  // is actually committed (writes within the same batch aren't visible to each
+  // other's rule evaluation, same as the two-batch split in createServer()).
+  await updateDoc(doc(db, COLLECTIONS.SERVERS, invite.serverId), {
+    memberCount: increment(1),
+  })
   return { id: serverSnap.id, ...serverSnap.data() } as Server
 }
 

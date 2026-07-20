@@ -361,7 +361,7 @@ function InviteCodeWidget({
 
   const handleCopy = () => {
     if (!activeInvite) return
-    navigator.clipboard.writeText(activeInvite.code)
+    navigator.clipboard.writeText(`${window.location.origin}/invite/${activeInvite.code}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -390,7 +390,7 @@ function InviteCodeWidget({
               {activeInvite.code}
             </span>
           </div>
-          <Tooltip content={copied ? 'Copied!' : 'Copy code'} side="top">
+          <Tooltip content={copied ? 'Link copied!' : 'Copy invite link'} side="top">
             <button
               onClick={handleCopy}
               className="w-7 h-7 flex items-center justify-center rounded-lg bg-pulse-bg-elevated text-pulse-text-muted hover:text-pulse-text-normal hover:bg-white/10 transition-colors shrink-0"
