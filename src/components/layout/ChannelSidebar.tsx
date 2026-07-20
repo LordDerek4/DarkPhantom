@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Hash, Megaphone, Plus, Search, X, Users, Link2, Copy, Check, RefreshCw } from 'lucide-react'
+import { ChevronDown, ChevronRight, Hash, Megaphone, Plus, Search, X, Users } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
-import { useServerDetails, useServerInvites } from '@/hooks/useServer'
+import { useServerDetails } from '@/hooks/useServer'
 import { useDMChannels } from '@/hooks/useDirectMessages'
 import { useAuth } from '@/hooks/useAuth'
 import { useUser } from '@/hooks/useUserCache'
@@ -48,13 +48,6 @@ function ServerChannelContent() {
   const canManageChannels = currentMember
     ? hasPermission(currentMember, roles, 'MANAGE_CHANNELS') || hasPermission(currentMember, roles, 'ADMINISTRATOR')
     : false
-
-  const isAdmin = !!server && (
-    server.ownerId === user?.uid ||
-    (currentMember ? hasPermission(currentMember, roles, 'ADMINISTRATOR') : false)
-  )
-
-  const defaultChannelId = channels.find(c => c.type !== 'category')?.id ?? ''
 
   const toggleCategory = (catId: string) => {
     setCollapsedCategories(prev => {
@@ -158,8 +151,6 @@ function ServerChannelContent() {
           </>
         )}
       </div>
-
-      <InviteCodeWidget serverId={server.id} defaultChannelId={defaultChannelId} isAdmin={isAdmin} />
 
       <CreateChannelModal
         open={showCreateModal}
@@ -339,92 +330,6 @@ function DMChannelItem({
       >
         <X size={12} />
       </button>
-    </div>
-  )
-}
-
-function InviteCodeWidget({
-  serverId,
-  defaultChannelId,
-  isAdmin,
-}: {
-  serverId: string
-  defaultChannelId: string
-  isAdmin: boolean
-}) {
-  const { user } = useAuth()
-  const { invites, create } = useServerInvites(serverId)
-  const [copied, setCopied] = useState(false)
-  const [generating, setGenerating] = useState(false)
-
-  const activeInvite = invites.find(inv => !inv.expiresAt || inv.expiresAt.toDate() > new Date())
-
-  const handleCopy = () => {
-    if (!activeInvite) return
-    navigator.clipboard.writeText(`${window.location.origin}/invite/${activeInvite.code}`)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleGenerate = async () => {
-    if (!user || !defaultChannelId) return
-    setGenerating(true)
-    try {
-      await create(defaultChannelId, user.uid, {})
-    } finally {
-      setGenerating(false)
-    }
-  }
-
-  return (
-    <div className="mx-2 mb-2 p-2.5 rounded-xl bg-pulse-bg-primary border border-white/5">
-      <div className="flex items-center gap-1.5 mb-2">
-        <Link2 size={12} className="text-pulse-text-muted shrink-0" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-pulse-text-muted">Invite Code</span>
-      </div>
-
-      {activeInvite ? (
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1 bg-pulse-bg-elevated rounded-lg px-2.5 py-1.5 min-w-0">
-            <span className="font-mono text-xs text-pulse-text-normal tracking-widest select-all">
-              {activeInvite.code}
-            </span>
-          </div>
-          <Tooltip content={copied ? 'Link copied!' : 'Copy invite link'} side="top">
-            <button
-              onClick={handleCopy}
-              className="w-7 h-7 flex items-center justify-center rounded-lg bg-pulse-bg-elevated text-pulse-text-muted hover:text-pulse-text-normal hover:bg-white/10 transition-colors shrink-0"
-            >
-              {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
-            </button>
-          </Tooltip>
-          {isAdmin && (
-            <Tooltip content="Generate new code" side="top">
-              <button
-                onClick={handleGenerate}
-                disabled={generating}
-                className="w-7 h-7 flex items-center justify-center rounded-lg bg-pulse-bg-elevated text-pulse-text-muted hover:text-pulse-text-normal hover:bg-white/10 transition-colors shrink-0 disabled:opacity-40"
-              >
-                <RefreshCw size={13} className={generating ? 'animate-spin' : ''} />
-              </button>
-            </Tooltip>
-          )}
-        </div>
-      ) : isAdmin ? (
-        <button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-pulse-brand/20 text-pulse-brand text-xs font-medium hover:bg-pulse-brand/30 transition-colors disabled:opacity-40"
-        >
-          {generating
-            ? <RefreshCw size={12} className="animate-spin" />
-            : <Plus size={12} />
-          }
-          {generating ? 'Generating…' : 'Generate Invite Code'}
-        </button>
-      ) : (
-        <p className="text-xs text-pulse-text-muted text-center py-1">No active invite code</p>
-      )}
     </div>
   )
 }

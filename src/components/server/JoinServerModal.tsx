@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link2, Hash } from 'lucide-react'
+import { Link2 } from 'lucide-react'
 import { useServers } from '@/hooks/useServer'
 import { useAppStore } from '@/store/useAppStore'
 import { Modal } from '@/components/ui/Modal'
@@ -40,7 +40,7 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
       onClose()
       setInviteCode('')
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? 'Invalid or expired invite code')
+      toast.error((err as Error).message ?? 'Invalid or expired invite link')
     } finally {
       setLoading(false)
     }
@@ -50,13 +50,13 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
     <Modal open={open} onClose={onClose} title="Join a Server" size="sm">
       <form onSubmit={handleJoin} className="space-y-4">
         <p className="text-pulse-text-muted text-sm">
-          Paste an invite link or type the 8-character code shown in any server's channel sidebar.
+          Paste an invite link to join a server.
         </p>
 
-        {/* Code input */}
+        {/* Link input */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-pulse-text-muted">
-            Invite Link or Code
+            Invite Link
           </label>
           <div className="relative">
             <Link2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-pulse-text-muted pointer-events-none" />
@@ -64,21 +64,14 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
               autoFocus
               value={inviteCode}
               onChange={e => setInviteCode(e.target.value)}
-              placeholder="ABCD1234 or https://…/invite/ABCD1234"
+              placeholder="https://…/invite/ABCD1234"
               className="w-full bg-pulse-bg-primary border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-pulse-text-normal placeholder:text-pulse-text-muted focus:border-pulse-brand/50 focus:outline-none transition-colors font-mono"
             />
           </div>
         </div>
 
-        {/* Examples */}
+        {/* Example */}
         <div className="rounded-xl bg-pulse-bg-primary border border-white/5 divide-y divide-white/5">
-          <div className="flex items-center gap-2.5 px-3 py-2.5">
-            <Hash size={13} className="text-pulse-text-muted shrink-0" />
-            <div>
-              <p className="text-xs font-medium text-pulse-text-muted">8-character code</p>
-              <p className="text-xs font-mono text-pulse-text-normal mt-0.5 tracking-widest">ABCD1234</p>
-            </div>
-          </div>
           <div className="flex items-center gap-2.5 px-3 py-2.5">
             <Link2 size={13} className="text-pulse-text-muted shrink-0" />
             <div>
