@@ -179,10 +179,18 @@ export async function joinServer(userId: string, inviteCode: string): Promise<Se
     throw new Error('Invite has reached its maximum uses')
   }
 
-  // Check if already a member
+  // Check if already a member. For a brand-new joiner this doc doesn't exist yet,
+  // and the serverMembers read rule references resource.data — reading a
+  // nonexistent doc under that rule throws permission-denied rather than just
+  // reporting "not found", so treat that specific failure as "not a member yet".
   const memberRef = doc(db, COLLECTIONS.SERVER_MEMBERS, `${invite.serverId}_${userId}`)
-  const memberSnap = await getDoc(memberRef)
-  if (memberSnap.exists()) {
+  let memberSnap
+  try {
+    memberSnap = await getDoc(memberRef)
+  } catch (err) {
+    memberSnap = null
+  }
+  if (memberSnap?.exists()) {
     const serverSnap = await getDoc(doc(db, COLLECTIONS.SERVERS, invite.serverId))
     return { id: serverSnap.id, ...serverSnap.data() } as Server
   }
@@ -191,10 +199,19 @@ export async function joinServer(userId: string, inviteCode: string): Promise<Se
   const serverSnap = await getDoc(doc(db, COLLECTIONS.SERVERS, invite.serverId))
   if (!serverSnap.exists()) throw new Error('Server not found')
 
-  // Get everyone role
-  const rolesSnap = await getDocs(
-    query(collection(db, COLLECTIONS.ROLES), where('serverId', '==', invite.serverId), where('isDefault', '==', true))
-  )
+  // Get everyone role. Reading roles also requires isMember/isOwner, which a
+  // brand-new joiner has neither of yet — same chicken-and-egg permission gap
+  // as the membership pre-check above. Fall back to the deterministic default
+  // role ID that createServer() always uses (`${serverId}_everyone`) so the
+  // join can proceed without needing read access to the roles collection.
+  let rolesSnap: { docs: { id: string }[] }
+  try {
+    rolesSnap = await getDocs(
+      query(collection(db, COLLECTIONS.ROLES), where('serverId', '==', invite.serverId), where('isDefault', '==', true))
+    )
+  } catch (err) {
+    rolesSnap = { docs: [] }
+  }
   const everyoneRoleId = rolesSnap.docs[0]?.id ?? `${invite.serverId}_everyone`
 
   // Batch 1: member + userServers + invite use count. None of these rules call
