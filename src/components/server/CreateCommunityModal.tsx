@@ -245,7 +245,7 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     tech: 'technology',
     business: 'business',
     science: 'science',
-    custom: 'social',
+    custom: 'custom',
   }
 
   const handleCreate = async () => {
