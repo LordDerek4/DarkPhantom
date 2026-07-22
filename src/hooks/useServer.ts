@@ -91,7 +91,7 @@ export function useServerDetails(serverId: string | null) {
   const channels = useAppStore(selectActiveChannels)
   const members = useAppStore(selectActiveMembers)
   const roles = useAppStore(selectActiveRoles)
-  const { setChannels, setMembers, setRoles, setUsers } = useAppStore()
+  const { setChannels, setMembers, setRoles, setUsers, setActiveChannel } = useAppStore()
   const [loading, setLoading] = useState(true)
 
   // Subscribe to channels
@@ -104,7 +104,16 @@ export function useServerDetails(serverId: string | null) {
     )
     const unsub = onSnapshot(
       q,
-      snap => { setChannels(serverId, snap.docs.map(d => ({ id: d.id, ...d.data() })) as never) },
+      snap => {
+        const loaded = snap.docs.map(d => ({ id: d.id, ...d.data() })) as never[]
+        setChannels(serverId, loaded)
+        // Auto-select first text channel if no channel is currently active
+        const { activeChannelId: current } = useAppStore.getState()
+        if (!current) {
+          const first = (loaded as { id: string; type?: string }[]).find(c => c.type !== 'category')
+          if (first) setActiveChannel(first.id)
+        }
+      },
       () => { setChannels(serverId, []); setLoading(false) }
     )
     return () => unsub()

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MessageSquare, UserPlus, UserMinus, Ban, Users, Shield, Settings, Calendar, Check, Clock } from 'lucide-react'
+import { X, MessageSquare, UserPlus, UserMinus, Ban, Users, Shield, Settings, Calendar, Check, Clock, Crown } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAppStore } from '@/store/useAppStore'
 import { Avatar } from '@/components/ui/Avatar'
@@ -206,7 +206,9 @@ export function UserProfileModal() {
                 style={{
                   background: profile.bannerUrl
                     ? undefined
-                    : `linear-gradient(135deg, #ef4444, #eb459e)`,
+                    : profile.isPremium && profile.profileAccentColor
+                      ? `linear-gradient(135deg, ${profile.profileAccentColor}cc, ${profile.profileAccentColor}55)`
+                      : `linear-gradient(135deg, #ef4444, #eb459e)`,
                 }}
               >
                 {profile.bannerUrl && (
@@ -217,13 +219,21 @@ export function UserProfileModal() {
               {/* Avatar + actions strip */}
               <div className="px-4 pb-0 -mt-8 flex items-end justify-between">
                 <div className="relative">
-                  <Avatar
-                    src={profile.avatarUrl}
-                    name={profile.displayName}
-                    userId={profile.uid}
-                    size="xl"
-                    className="ring-4 ring-pulse-bg-secondary"
-                  />
+                  <span
+                    className="rounded-full inline-flex"
+                    style={
+                      profile.isPremium && profile.profileAccentColor
+                        ? { padding: '3px', background: profile.profileAccentColor, display: 'inline-flex' }
+                        : { padding: '4px', background: 'rgba(36,37,39,1)', display: 'inline-flex' }
+                    }
+                  >
+                    <Avatar
+                      src={profile.avatarUrl}
+                      name={profile.displayName}
+                      userId={profile.uid}
+                      size="xl"
+                    />
+                  </span>
                   <span
                     className={cn(
                       'absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full border-2 border-pulse-bg-secondary',
@@ -265,7 +275,36 @@ export function UserProfileModal() {
               <div className="px-4 pt-3 pb-4 space-y-3">
                 {/* Name + status */}
                 <div>
-                  <h2 className="text-lg font-bold text-white leading-tight">{profile.displayName}</h2>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h2
+                      className="text-lg font-bold leading-tight"
+                      style={
+                        profile.isPremium && profile.usernameGradient
+                          ? {
+                              background: `linear-gradient(${profile.usernameGradient})`,
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text',
+                            }
+                          : { color: 'white' }
+                      }
+                    >
+                      {profile.displayName}
+                    </h2>
+                    {profile.isPremium && (
+                      <span title="Premium member" className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 text-[10px] font-bold shrink-0">
+                        <Crown size={9} /> Premium
+                      </span>
+                    )}
+                  </div>
+                  {profile.isPremium && profile.premiumSince && (() => {
+                    const months = Math.max(1, Math.floor((Date.now() - profile.premiumSince.toMillis()) / (1000 * 60 * 60 * 24 * 30)))
+                    return (
+                      <p className="text-[10px] text-yellow-500/70 font-medium">
+                        Premium for {months} month{months !== 1 ? 's' : ''}
+                      </p>
+                    )
+                  })()}
                   <p className="text-sm text-pulse-text-muted">@{profile.username}</p>
                   {profile.customStatus && (
                     <p className="text-xs text-pulse-text-muted mt-1 flex items-center gap-1.5">

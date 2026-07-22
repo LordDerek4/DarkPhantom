@@ -21,11 +21,12 @@ import { JoinServerModal } from '@/components/server/JoinServerModal'
 import { CreateCommunityModal } from '@/components/server/CreateCommunityModal'
 import { UserProfileModal } from '@/components/profile/UserProfileModal'
 import { ServerSettingsModal } from '@/components/server/ServerSettingsModal'
-import { CallOverlay } from '@/components/call/CallOverlay'
-import { IncomingCallNotification } from '@/components/call/IncomingCallNotification'
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel'
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay'
+import { PremiumTutorialOverlay } from '@/components/tutorial/PremiumTutorialOverlay'
 import { useTutorial } from '@/hooks/useTutorial'
+import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/hooks/useTheme'
 import { SubscriptionSuccessPage, SubscriptionCancelPage } from '@/pages/SubscriptionSuccessPage'
 
 const DiscoverPage = lazy(() => import('@/components/discover/DiscoverPage').then(m => ({ default: m.DiscoverPage })))
@@ -57,6 +58,16 @@ function MainApp() {
   const { viewMode, isCreateCommunityOpen, closeCreateCommunity, isJoinServerOpen, openJoinServer, closeJoinServer, showTutorial } = useAppStore()
   const [joinInviteCode, setJoinInviteCode] = useState('')
   const { completeTutorial, skipTutorial } = useTutorial()
+  const { user } = useAuth()
+  const [showPremiumTutorial, setShowPremiumTutorial] = useState(false)
+  useTheme(user?.premiumTheme)
+
+  useEffect(() => {
+    if (user?.isPremium && localStorage.getItem('premiumTutorialPending') === 'true') {
+      localStorage.removeItem('premiumTutorialPending')
+      setShowPremiumTutorial(true)
+    }
+  }, [user?.isPremium])
 
   useEffect(() => {
     requestNotificationPermission()
@@ -98,6 +109,7 @@ function MainApp() {
       <UserProfileModal />
       <ServerSettingsModal />
       {showTutorial && <TutorialOverlay onComplete={completeTutorial} onSkip={skipTutorial} />}
+      {showPremiumTutorial && <PremiumTutorialOverlay onComplete={() => setShowPremiumTutorial(false)} />}
     </AppLayout>
   )
 }
@@ -128,8 +140,6 @@ export default function App() {
               <MainApp />
               <GlobalSearch />
               <UserSettings />
-              <CallOverlay />
-              <IncomingCallNotification />
               <NotificationsPanel />
             </ProtectedRoute>
           }
@@ -154,8 +164,6 @@ function LandingOrApp() {
       <MainApp />
       <GlobalSearch />
       <UserSettings />
-      <CallOverlay />
-      <IncomingCallNotification />
       <NotificationsPanel />
     </ProtectedRoute>
   )

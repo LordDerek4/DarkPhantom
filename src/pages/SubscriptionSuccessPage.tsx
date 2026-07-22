@@ -61,7 +61,10 @@ export function SubscriptionSuccessPage() {
             ))}
           </div>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              localStorage.setItem('premiumTutorialPending', 'true')
+              navigate('/')
+            }}
             className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl transition-all mx-auto"
           >
             <Sparkles size={16} />

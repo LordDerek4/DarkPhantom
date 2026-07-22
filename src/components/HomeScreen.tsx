@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { MessageSquare, Plus, Compass, Users, Zap, ArrowRight, Hash } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAppStore } from '@/store/useAppStore'
+import { useUser } from '@/hooks/useUserCache'
 import { Avatar } from '@/components/ui/Avatar'
 import { AppLogo } from '@/components/ui/AppLogo'
 import { getTrendingServers } from '@/services/discover.service'
@@ -279,8 +280,7 @@ function RecentDMItem({ channelId, otherId, lastMessage, onOpen }: {
   lastMessage: string
   onOpen: () => void
 }) {
-  const users = useAppStore(s => s.users)
-  const u = users[otherId]
+  const u = useUser(otherId)
 
   return (
     <button

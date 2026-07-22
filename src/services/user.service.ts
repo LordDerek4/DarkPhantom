@@ -15,7 +15,7 @@ import type { User, UserStatus } from '@/types'
 
 export async function updateUserProfile(
   userId: string,
-  updates: Partial<Pick<User, 'displayName' | 'bio' | 'avatarUrl' | 'bannerUrl' | 'customStatus' | 'themePreference' | 'notificationSettings'>>
+  updates: Partial<Pick<User, 'displayName' | 'bio' | 'avatarUrl' | 'bannerUrl' | 'customStatus' | 'themePreference' | 'notificationSettings' | 'usernameGradient' | 'profileAccentColor' | 'premiumTheme' | 'referralCode'>>
 ): Promise<void> {
   await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
     ...updates,

@@ -140,13 +140,17 @@ export function ServerSidebar() {
                         src={server.iconUrl}
                         alt={server.name}
                         className={cn('w-12 h-12 object-cover transition-all duration-200', isActive ? 'rounded-2xl' : 'rounded-3xl hover:rounded-2xl')}
+                        style={server.accentColor && isActive ? { outline: `2px solid ${server.accentColor}`, outlineOffset: '2px' } : undefined}
                       />
                     ) : (
-                      <div className={cn(
-                        'w-12 h-12 flex items-center justify-center text-white font-semibold text-sm',
-                        'bg-pulse-bg-secondary hover:bg-pulse-brand transition-all duration-200',
-                        isActive ? 'rounded-2xl bg-pulse-brand' : 'rounded-3xl hover:rounded-2xl'
-                      )}>
+                      <div
+                        className={cn(
+                          'w-12 h-12 flex items-center justify-center text-white font-semibold text-sm',
+                          'bg-pulse-bg-secondary hover:bg-pulse-brand transition-all duration-200',
+                          isActive ? 'rounded-2xl bg-pulse-brand' : 'rounded-3xl hover:rounded-2xl'
+                        )}
+                        style={server.accentColor && isActive ? { backgroundColor: server.accentColor, outline: `2px solid ${server.accentColor}`, outlineOffset: '2px' } : undefined}
+                      >
                         {server.name.slice(0, 2).toUpperCase()}
                       </div>
                     )}
