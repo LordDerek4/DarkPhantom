@@ -258,7 +258,7 @@ export interface CommunityHealth {
 
 // ─── AI Agents ────────────────────────────────────────────────────────────────
 
-export type AICommandType = 'ask' | 'summarize' | 'explain' | 'faq' | 'announce' | 'onboard'
+export type AICommandType = 'ask' | 'summarize' | 'explain' | 'faq' | 'announce' | 'onboard' | 'notes'
 
 export interface AIInteraction {
   id: string

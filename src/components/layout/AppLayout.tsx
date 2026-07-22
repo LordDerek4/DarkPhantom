@@ -1,5 +1,6 @@
 import React from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Crown, Lock, Sparkles, X } from 'lucide-react'
 import { ServerSidebar } from './ServerSidebar'
 import { ChannelSidebar } from './ChannelSidebar'
 import { MemberList } from './MemberList'
@@ -7,6 +8,7 @@ import { TopBar } from './TopBar'
 import { useAppStore } from '@/store/useAppStore'
 import { useServerDetails } from '@/hooks/useServer'
 import { usePresenceSubscription } from '@/hooks/usePresence'
+import { useAuth } from '@/hooks/useAuth'
 import { AIAssistant } from '@/components/ai/AIAssistant'
 import { ThreadPanel } from '@/components/threads/ThreadPanel'
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard'
@@ -16,12 +18,57 @@ interface AppLayoutProps {
   children: React.ReactNode
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
-  const { activeServerId, isMemberListOpen, viewMode, openPanel, closePanel, activeChannelId, isMobileSidebarOpen, closeMobileSidebar } = useAppStore()
-  const { members } = useServerDetails(activeServerId)
+function AIPremiumGate({ onClose, onUpgrade }: { onClose: () => void; onUpgrade: () => void }) {
+  return (
+    <motion.div
+      key="ai-gate"
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 40 }}
+      transition={{ duration: 0.2 }}
+      className="w-80 bg-pulse-bg-secondary border-l border-black/20 flex flex-col overflow-hidden"
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        <div className="flex items-center gap-2 text-sm font-semibold text-pulse-text-normal">
+          <Sparkles size={16} className="text-yellow-400" /> AI Assistant
+        </div>
+        <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-pulse-text-muted hover:text-white transition-colors">
+          <X size={16} />
+        </button>
+      </div>
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-5">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+          <Lock size={28} className="text-white" />
+        </div>
+        <div>
+          <h3 className="text-white font-bold text-base mb-1">Premium Feature</h3>
+          <p className="text-pulse-text-muted text-sm leading-relaxed">
+            The AI Companion is available to Premium members. Summarise conversations, get smart replies, and draft announcements.
+          </p>
+        </div>
+        <button
+          onClick={onUpgrade}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-yellow-500/20"
+        >
+          <Crown size={15} /> Upgrade to Premium
+        </button>
+      </div>
+    </motion.div>
+  )
+}
 
+export function AppLayout({ children }: AppLayoutProps) {
+  const { activeServerId, isMemberListOpen, viewMode, openPanel, closePanel, activeChannelId, isMobileSidebarOpen, closeMobileSidebar, setSettingsOpen, dmChannels } = useAppStore()
+  const { members } = useServerDetails(activeServerId)
+  const { user } = useAuth()
+
+  // Subscribe to presence for server members AND all DM contacts
   const memberIds = members.map(m => m.userId)
-  usePresenceSubscription(memberIds)
+  const dmPartnerIds = dmChannels.flatMap(c =>
+    c.participantIds.filter(id => id !== user?.uid)
+  )
+  const allPresenceIds = [...new Set([...memberIds, ...dmPartnerIds])]
+  usePresenceSubscription(allPresenceIds)
 
   const showMemberList = isMemberListOpen && viewMode === 'server' && !openPanel
   const showChannelSidebar = viewMode !== 'discover' && viewMode !== 'friends'
@@ -57,12 +104,20 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           <AnimatePresence>
             {openPanel === 'ai' && activeChannelId && activeServerId && (
-              <AIAssistant
-                key="ai"
-                channelId={activeChannelId}
-                serverId={activeServerId}
-                onClose={closePanel}
-              />
+              user?.isPremium ? (
+                <AIAssistant
+                  key="ai"
+                  channelId={activeChannelId}
+                  serverId={activeServerId}
+                  onClose={closePanel}
+                />
+              ) : (
+                <AIPremiumGate
+                  key="ai-gate"
+                  onClose={closePanel}
+                  onUpgrade={() => { closePanel(); setSettingsOpen(true, 'premium') }}
+                />
+              )
             )}
             {openPanel === 'threads' && activeChannelId && activeServerId && (
               <ThreadPanel

@@ -41,6 +41,7 @@ interface AIAssistantProps {
 const COMMANDS: { cmd: AICommandType; label: string; desc: string; placeholder: string }[] = [
   { cmd: 'ask', label: '/ask', desc: 'Ask anything', placeholder: 'Ask a question about this server...' },
   { cmd: 'summarize', label: '/summarize', desc: 'Summarize conversation', placeholder: 'Focus on... (or leave blank for general)' },
+  { cmd: 'notes', label: '/notes', desc: 'Create meeting notes', placeholder: 'Additional context (optional)...' },
   { cmd: 'explain', label: '/explain', desc: 'Explain a topic', placeholder: 'What should I explain?' },
   { cmd: 'faq', label: '/faq', desc: 'Generate FAQ', placeholder: 'Generate FAQ from recent messages' },
   { cmd: 'announce', label: '/announce', desc: 'Draft announcement', placeholder: 'What to announce?' },

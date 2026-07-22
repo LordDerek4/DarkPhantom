@@ -92,6 +92,11 @@ export async function runAICommand(
       userMessage = `Create an onboarding welcome for a new member. Context about the server:\n${context.slice(-10).join('\n')}`
       break
 
+    case 'notes':
+      systemPrompt = `You are a professional meeting notes taker. Extract and structure meeting notes from this conversation. Use clear headings: ## Attendees, ## Key Discussion Points, ## Decisions Made, ## Action Items, ## Next Steps. Be concise and factual.`
+      userMessage = `Create structured meeting notes from this conversation:\n${context.join('\n')}\n\nAdditional context: ${input || 'none'}`
+      break
+
     default:
       systemPrompt = `You are a helpful community assistant.`
       userMessage = input
@@ -247,4 +252,18 @@ export async function generateMeetingNotes(transcript: string): Promise<{
   } catch {
     return { summary: text, actionItems: [], decisions: [], followUps: [] }
   }
+}
+
+export async function getSmartReplies(channelId: string): Promise<string[]> {
+  const context = await fetchChannelContext(channelId, 10)
+  if (context.length === 0) return []
+  const { text } = await callClaude(
+    `You are a smart reply assistant. Given the recent chat messages, suggest exactly 3 short, natural reply options. Each reply should be 2-12 words, conversational, and appropriate. Return ONLY a JSON array of 3 strings, e.g. ["Sure, sounds good!", "Let me check on that", "I agree completely"]. No other text.`,
+    `Recent messages:\n${context.join('\n')}`
+  )
+  try {
+    const parsed = JSON.parse(text.trim())
+    if (Array.isArray(parsed)) return parsed.slice(0, 3)
+  } catch { /* fall through */ }
+  return text.split('\n').filter(l => l.trim()).slice(0, 3)
 }
