@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { auth, db } from './_lib/firebase-admin'
-import { stripe } from './_lib/stripe'
+import { getDb, verifyIdToken } from './_lib/firebase-admin.js'
+import { stripe } from './_lib/stripe.js'
 import { FieldValue } from 'firebase-admin/firestore'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,8 +13,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!sessionId) return res.status(400).json({ error: 'sessionId is required' })
 
   try {
-    const decoded = await auth.verifyIdToken(token)
-    const uid = decoded.uid
+    const { uid } = await verifyIdToken(token)
+    const db = getDb()
 
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ['subscription'],
@@ -34,8 +34,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     return res.json({ isPremium: true, subscriptionId: sub?.id })
-  } catch (err) {
+  } catch (err: any) {
     console.error('verify-session error:', err)
-    return res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ error: err.message ?? 'Internal server error' })
   }
 }

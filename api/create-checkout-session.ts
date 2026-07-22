@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { auth, db } from './_lib/firebase-admin'
-import { stripe } from './_lib/stripe'
+import { getDb, verifyIdToken } from './_lib/firebase-admin.js'
+import { stripe } from './_lib/stripe.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -9,8 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!token) return res.status(401).json({ error: 'Unauthorized' })
 
   try {
-    const decoded = await auth.verifyIdToken(token)
-    const uid = decoded.uid
+    const { uid, email } = await verifyIdToken(token)
+    const db = getDb()
 
     const userSnap = await db.collection('users').doc(uid).get()
     const userData = userSnap.data() ?? {}
@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: decoded.email,
+        email,
         metadata: { firebaseUid: uid },
       })
       customerId = customer.id
@@ -39,8 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     return res.json({ url: session.url })
-  } catch (err) {
+  } catch (err: any) {
     console.error('create-checkout-session error:', err)
-    return res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ error: err.message ?? 'Internal server error' })
   }
 }
