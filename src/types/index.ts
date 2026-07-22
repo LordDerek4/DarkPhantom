@@ -24,6 +24,11 @@ export interface User {
   premiumSince?: import('firebase/firestore').Timestamp | null
   stripeCustomerId?: string | null
   stripeSubscriptionId?: string | null
+  usernameGradient?: string | null
+  profileAccentColor?: string | null
+  premiumTheme?: string | null
+  loginStreak?: number
+  referralCode?: string | null
 }
 
 export interface NotificationSettings {
@@ -49,6 +54,7 @@ export interface Server {
   boostLevel: ServerBoostLevel
   memberCount: number
   isPublic: boolean
+  accentColor?: string | null
   vanityUrl: string | null
   rulesChannelId: string | null
   systemChannelId: string | null

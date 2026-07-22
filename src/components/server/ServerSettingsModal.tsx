@@ -31,6 +31,7 @@ export function ServerSettingsModal() {
   const [tab, setTab] = useState<Tab>('overview')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [accentColor, setAccentColor] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [iconPreview, setIconPreview] = useState<string | null>(null)
   const [iconFile, setIconFile] = useState<File | null>(null)
@@ -44,6 +45,7 @@ export function ServerSettingsModal() {
     if (server) {
       setName(server.name)
       setDescription(server.description ?? '')
+      setAccentColor(server.accentColor ?? null)
       setIconPreview(server.iconUrl)
       setIconFile(null)
       setDeleteConfirm('')
@@ -94,6 +96,7 @@ export function ServerSettingsModal() {
         name: name.trim() || server.name,
         description: description.trim(),
         iconUrl,
+        accentColor,
       })
       toast.success('Server updated!')
       setIconFile(null)
@@ -164,7 +167,7 @@ export function ServerSettingsModal() {
     }
   }
 
-  const isDirty = server && (name !== server.name || description !== (server.description ?? '') || !!iconFile)
+  const isDirty = server && (name !== server.name || description !== (server.description ?? '') || !!iconFile || accentColor !== (server.accentColor ?? null))
 
   if (!serverSettingsId || !server) return null
 
@@ -314,6 +317,27 @@ export function ServerSettingsModal() {
                   className="w-full bg-pulse-bg-primary border border-white/10 rounded-xl px-3 py-2.5 text-sm text-pulse-text-normal placeholder:text-pulse-text-muted focus:border-pulse-brand/50 focus:outline-none resize-none transition-colors disabled:opacity-50"
                 />
               </div>
+
+              {/* Server Boost Accent Colour — premium owner only */}
+              {isOwner && user?.isPremium && (
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-pulse-text-muted mb-2">
+                    <span className="text-yellow-400">★</span> Server Accent Colour (Premium)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[null, '#ef4444', '#a855f7', '#3b82f6', '#22c55e', '#f97316', '#eab308', '#ec4899', '#14b8a6'].map(c => (
+                      <button
+                        key={c ?? 'none'}
+                        onClick={() => setAccentColor(c)}
+                        title={c ?? 'Default'}
+                        className={`w-7 h-7 rounded-full border-2 transition-all ${accentColor === c ? 'border-white scale-110' : 'border-transparent hover:border-white/50'}`}
+                        style={{ background: c ?? '#374151' }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-pulse-text-muted mt-1.5">Applied to the server header and icon ring.</p>
+                </div>
+              )}
 
               <div className="bg-pulse-bg-primary rounded-xl border border-white/5 divide-y divide-white/5">
                 <InfoRow label="Server ID" value={server.id} mono />

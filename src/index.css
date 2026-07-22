@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Default theme (CSS variable definitions) ── */
+/* Format: R G B space-separated for Tailwind opacity modifier support */
+:root {
+  --pulse-bg-primary:   26 27 30;
+  --pulse-bg-secondary: 36 37 39;
+  --pulse-bg-tertiary:  43 45 49;
+  --pulse-bg-elevated:  49 51 56;
+  --pulse-bg-modifier:  59 61 67;
+  --pulse-bg-floating:  17 18 20;
+  --pulse-surface-overlay: 43 45 49;
+  --pulse-surface-card:    49 51 56;
+  --pulse-surface-input:   30 31 34;
+  --pulse-brand:       239 68 68;
+  --pulse-brand-hover: 220 38 38;
+  --pulse-brand-dim:   185 28 28;
+  --pulse-text-normal:   219 222 225;
+  --pulse-text-muted:    128 132 142;
+  --pulse-text-link:     0 168 252;
+  --pulse-text-positive: 35 165 90;
+  --pulse-text-warning:  240 178 50;
+  --pulse-text-danger:   242 63 67;
+  --pulse-status-online:  35 165 90;
+  --pulse-status-idle:    240 178 50;
+  --pulse-status-dnd:     242 63 67;
+  --pulse-status-offline: 128 132 142;
+  --pulse-channel-default:  128 132 142;
+  --pulse-channel-selected: 219 222 225;
+}
+
 @layer base {
   * {
     box-sizing: border-box;

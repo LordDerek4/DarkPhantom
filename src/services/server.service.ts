@@ -285,7 +285,7 @@ export async function transferOwnership(serverId: string, newOwnerId: string): P
 
 export async function updateServer(
   serverId: string,
-  updates: Partial<Pick<Server, 'name' | 'description' | 'iconUrl' | 'bannerUrl' | 'isPublic'>>
+  updates: Partial<Pick<Server, 'name' | 'description' | 'iconUrl' | 'bannerUrl' | 'isPublic' | 'accentColor'>>
 ): Promise<void> {
   await updateDoc(doc(db, COLLECTIONS.SERVERS, serverId), {
     ...updates,

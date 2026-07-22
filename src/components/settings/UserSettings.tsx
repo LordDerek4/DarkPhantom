@@ -93,6 +93,9 @@ export function UserSettings() {
   const [displayName, setDisplayName] = useState(user?.displayName ?? '')
   const [bio, setBio] = useState(user?.bio ?? '')
   const [customStatus, setCustomStatus] = useState(user?.customStatus ?? '')
+  const [usernameGradient, setUsernameGradient] = useState(user?.usernameGradient ?? null as string | null)
+  const [profileAccentColor, setProfileAccentColor] = useState(user?.profileAccentColor ?? null as string | null)
+  const [premiumTheme, setPremiumTheme] = useState(user?.premiumTheme ?? null as string | null)
   const [saving, setSaving] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [subscribing, setSubscribing] = useState(false)
@@ -107,6 +110,9 @@ export function UserSettings() {
       setDisplayName(user.displayName)
       setBio(user.bio ?? '')
       setCustomStatus(user.customStatus ?? '')
+      setUsernameGradient(user.usernameGradient ?? null)
+      setProfileAccentColor(user.profileAccentColor ?? null)
+      setPremiumTheme(user.premiumTheme ?? null)
     }
   }, [user])
 
@@ -160,7 +166,12 @@ export function UserSettings() {
     if (!user) return
     setSaving(true)
     try {
-      await updateAuthProfile({ displayName: displayName.trim(), bio: bio.trim(), customStatus: customStatus.trim() })
+      await updateAuthProfile({
+        displayName: displayName.trim(),
+        bio: bio.trim(),
+        customStatus: customStatus.trim(),
+        ...(user.isPremium && { usernameGradient, profileAccentColor, premiumTheme }),
+      })
       toast.success('Profile saved!')
     } catch {
       toast.error('Failed to save profile')
@@ -190,7 +201,10 @@ export function UserSettings() {
   const isDirty = user && (
     displayName !== user.displayName ||
     bio !== (user.bio ?? '') ||
-    customStatus !== (user.customStatus ?? '')
+    customStatus !== (user.customStatus ?? '') ||
+    usernameGradient !== (user.usernameGradient ?? null) ||
+    profileAccentColor !== (user.profileAccentColor ?? null) ||
+    premiumTheme !== (user.premiumTheme ?? null)
   )
 
   if (!isSettingsOpen) return null
@@ -404,10 +418,17 @@ export function UserSettings() {
                 <h2 className="text-xl font-bold text-white">Profile</h2>
 
                 {/* Live preview */}
-                <div className="rounded-xl overflow-hidden border border-white/10">
+                <div
+                  className="rounded-xl overflow-hidden border border-white/10"
+                  style={user.isPremium && profileAccentColor ? { borderColor: profileAccentColor + '50' } : undefined}
+                >
                   <div
                     className="h-20 relative"
-                    style={{ background: 'linear-gradient(135deg, #ef4444, #eb459e)' }}
+                    style={{
+                      background: user.isPremium && profileAccentColor
+                        ? `linear-gradient(135deg, ${profileAccentColor}cc, ${profileAccentColor}55)`
+                        : 'linear-gradient(135deg, #ef4444, #eb459e)'
+                    }}
                   >
                     {user.bannerUrl && <img src={user.bannerUrl} alt="" className="w-full h-full object-cover" />}
                   </div>
@@ -485,6 +506,75 @@ export function UserSettings() {
                       ))}
                     </div>
                   </div>
+
+                  {/* ── Premium Profile Customisation ── */}
+                  {user.isPremium && (
+                    <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Crown size={13} className="text-yellow-400" />
+                        <span className="text-xs font-bold uppercase tracking-wide text-yellow-400">Premium Profile</span>
+                      </div>
+
+                      {/* Gradient username */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-pulse-text-muted mb-2">
+                          Username Gradient
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { id: null, label: 'None' },
+                            { id: '135deg, #a855f7, #ec4899', label: 'Aurora' },
+                            { id: '135deg, #3b82f6, #06b6d4', label: 'Ocean' },
+                            { id: '135deg, #22c55e, #14b8a6', label: 'Forest' },
+                            { id: '135deg, #f97316, #ef4444', label: 'Sunset' },
+                            { id: '135deg, #eab308, #f97316', label: 'Gold' },
+                            { id: '135deg, #ec4899, #f43f5e', label: 'Rose' },
+                          ].map(g => (
+                            <button
+                              key={g.label}
+                              onClick={() => setUsernameGradient(g.id)}
+                              className={cn(
+                                'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all',
+                                usernameGradient === g.id
+                                  ? 'border-yellow-500 ring-1 ring-yellow-500'
+                                  : 'border-white/10 hover:border-white/30',
+                              )}
+                              style={g.id ? {
+                                background: `linear-gradient(${g.id})`,
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                color: 'transparent',
+                              } : { color: 'white' }}
+                            >
+                              {g.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Profile accent color */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-pulse-text-muted mb-2">
+                          Profile Accent Colour
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {[null, '#a855f7', '#3b82f6', '#22c55e', '#f97316', '#ef4444', '#eab308', '#ec4899', '#14b8a6'].map(c => (
+                            <button
+                              key={c ?? 'none'}
+                              onClick={() => setProfileAccentColor(c)}
+                              title={c ?? 'None'}
+                              className={cn(
+                                'w-7 h-7 rounded-full border-2 transition-all',
+                                profileAccentColor === c ? 'border-white scale-110' : 'border-transparent hover:border-white/50',
+                              )}
+                              style={{ background: c ?? '#374151' }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Avatar upload (drag zone) */}
                   <div>
@@ -625,6 +715,33 @@ export function UserSettings() {
                         Manage Subscription
                       </button>
                     </div>
+
+                    {/* Loyalty + Referral */}
+                    {user.premiumSince && (() => {
+                      const months = Math.max(1, Math.floor((Date.now() - user.premiumSince!.toMillis()) / (1000 * 60 * 60 * 24 * 30)))
+                      const referral = user.referralCode ?? user.uid.slice(0, 8).toUpperCase()
+                      return (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-pulse-bg-primary rounded-xl border border-white/5 p-4 text-center">
+                            <Trophy size={20} className="text-yellow-400 mx-auto mb-2" />
+                            <p className="text-2xl font-black text-white">{months}</p>
+                            <p className="text-xs text-pulse-text-muted">Month{months !== 1 ? 's' : ''} Premium</p>
+                          </div>
+                          <div className="bg-pulse-bg-primary rounded-xl border border-white/5 p-4">
+                            <Gift size={14} className="text-pulse-brand mb-1" />
+                            <p className="text-xs text-pulse-text-muted mb-1">Referral Code</p>
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(referral); toast.success('Copied!') }}
+                              className="font-mono text-sm font-bold text-white tracking-widest hover:text-pulse-brand transition-colors"
+                              title="Click to copy"
+                            >
+                              {referral}
+                            </button>
+                            <p className="text-[10px] text-pulse-text-muted mt-1">Click to copy</p>
+                          </div>
+                        </div>
+                      )
+                    })()}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {PREMIUM_CATEGORIES.map(cat => (
@@ -862,10 +979,58 @@ export function UserSettings() {
             {activeTab === 'appearance' && (
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-white">Appearance</h2>
-                <div className="bg-pulse-bg-primary rounded-xl border border-white/5 p-4">
-                  <p className="text-sm text-pulse-text-muted">
-                    Dark mode is the default theme. Additional themes coming soon.
-                  </p>
+
+                {/* Premium Themes */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs font-bold uppercase tracking-wide text-pulse-text-muted">
+                      App Theme
+                    </label>
+                    {!user?.isPremium && (
+                      <span className="flex items-center gap-1 text-[10px] text-yellow-400 font-bold">
+                        <Crown size={10} /> Premium only
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: null, label: 'Default Dark', bg: '#1a1b1e', accent: '#ef4444', free: true },
+                      { id: 'midnight', label: 'Midnight Blue', bg: '#0f172a', accent: '#3b82f6', free: false },
+                      { id: 'forest', label: 'Forest', bg: '#0d1f0d', accent: '#22c55e', free: false },
+                      { id: 'rose-gold', label: 'Rose Gold', bg: '#1f0f18', accent: '#ec4899', free: false },
+                      { id: 'cyber', label: 'Cyber Purple', bg: '#110f1f', accent: '#a855f7', free: false },
+                      { id: 'ocean', label: 'Ocean', bg: '#0a1628', accent: '#06b6d4', free: false },
+                    ].map(t => {
+                      const locked = !t.free && !user?.isPremium
+                      const active = premiumTheme === t.id
+                      return (
+                        <button
+                          key={t.label}
+                          disabled={locked}
+                          onClick={() => { if (!locked) setPremiumTheme(t.id) }}
+                          className={cn(
+                            'relative flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
+                            active ? 'border-yellow-500 ring-1 ring-yellow-500' : 'border-white/10 hover:border-white/30',
+                            locked && 'opacity-50 cursor-not-allowed',
+                          )}
+                          style={{ background: t.bg }}
+                        >
+                          <span className="w-5 h-5 rounded-full shrink-0" style={{ background: t.accent }} />
+                          <span className="text-xs font-semibold text-white truncate">{t.label}</span>
+                          {locked && <Crown size={10} className="text-yellow-400 ml-auto shrink-0" />}
+                          {active && <Check size={12} className="text-yellow-400 ml-auto shrink-0" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {user?.isPremium && (
+                    <button
+                      onClick={() => handleSaveProfile()}
+                      className="mt-3 flex items-center gap-2 px-4 py-2 bg-pulse-brand hover:bg-pulse-brand-hover text-white text-sm font-semibold rounded-xl transition-colors"
+                    >
+                      <Check size={14} /> Apply Theme
+                    </button>
+                  )}
                 </div>
               </div>
             )}

@@ -89,10 +89,14 @@ function ServerChannelContent() {
     <>
       {/* Server header */}
       <button
-        className="flex items-center justify-between px-4 h-12 font-semibold text-pulse-text-normal hover:bg-white/5 border-b border-black/20 shrink-0"
+        className="flex items-center justify-between px-4 h-12 font-semibold text-pulse-text-normal hover:bg-white/5 border-b shrink-0 transition-colors"
+        style={server.accentColor
+          ? { borderBottomColor: server.accentColor + '60', boxShadow: `0 1px 0 ${server.accentColor}30` }
+          : { borderBottomColor: 'rgba(0,0,0,0.2)' }}
         onClick={() => setServerSettingsId(server.id)}
       >
         <span className="truncate">{server.name}</span>
+        {server.accentColor && <span className="w-2 h-2 rounded-full shrink-0 mr-1" style={{ background: server.accentColor }} />}
         <ChevronDown size={16} />
       </button>
 
