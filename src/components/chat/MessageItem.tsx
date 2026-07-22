@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Edit2, Trash2, Pin, Reply, MoreHorizontal, Check, X, SmilePlus } from 'lucide-react'
+import { Edit2, Trash2, Pin, Reply, MoreHorizontal, Check, X, SmilePlus, Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn, formatMessageTime, formatFullDateTime } from '@/utils/helpers'
 import { Avatar } from '@/components/ui/Avatar'
@@ -127,11 +127,25 @@ export function MessageItem({
           <div className="flex items-baseline gap-2 mb-0.5">
             <button
               onClick={() => setUserProfileId(message.authorId)}
-              className="text-sm font-semibold text-white hover:underline"
-              style={{ color: getMemberColor(member, roles) }}
+              className="text-sm font-semibold hover:underline"
+              style={
+                author?.isPremium && author.usernameGradient
+                  ? {
+                      background: `linear-gradient(${author.usernameGradient})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }
+                  : { color: getMemberColor(member, roles) || 'white' }
+              }
             >
               {member?.nickname ?? author?.displayName ?? 'Unknown'}
             </button>
+            {author?.isPremium && (
+              <span title="Premium member" className="inline-flex items-center">
+                <Crown size={11} className="text-yellow-400" />
+              </span>
+            )}
             <Tooltip content={message.createdAt ? formatFullDateTime(message.createdAt) : ''} side="top">
               <span className="text-[11px] text-pulse-text-muted cursor-default">
                 {message.createdAt ? formatMessageTime(message.createdAt) : ''}

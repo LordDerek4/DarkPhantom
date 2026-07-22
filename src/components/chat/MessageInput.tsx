@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { Plus, Smile, Send, X, Mic, BarChart2, Calendar } from 'lucide-react'
+import { Plus, Smile, Send, X, Mic, Mic2, BarChart2, Calendar, Sparkles, Loader } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import EmojiPicker from 'emoji-picker-react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -7,12 +7,15 @@ import { cn } from '@/utils/helpers'
 import { uploadMessageAttachment, validateAttachmentFile } from '@/services/storage.service'
 import { useAuth } from '@/hooks/useAuth'
 import { VoiceRecorder } from '@/components/voice/VoiceRecorder'
+import { useSpeechToText } from '@/hooks/useSpeechToText'
 import type { ServerMember, User, Attachment } from '@/types'
 import toast from 'react-hot-toast'
+import { getSmartReplies } from '@/services/ai.service'
 
 const SLASH_COMMANDS = [
   { cmd: '/ask', desc: 'Ask AI a question' },
   { cmd: '/summarize', desc: 'Summarize conversation' },
+  { cmd: '/notes', desc: 'Create meeting notes' },
   { cmd: '/explain', desc: 'Explain a topic' },
   { cmd: '/faq', desc: 'Generate FAQ' },
   { cmd: '/announce', desc: 'Draft an announcement' },
@@ -66,7 +69,22 @@ export function MessageInput({
   const [showSlash, setShowSlash] = useState(false)
   const [slashQuery, setSlashQuery] = useState('')
   const [slashIndex, setSlashIndex] = useState(0)
+  const [smartReplies, setSmartReplies] = useState<string[]>([])
+  const [loadingReplies, setLoadingReplies] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const handleSmartReply = async () => {
+    if (!channelId || loadingReplies || !user?.isPremium) return
+    setLoadingReplies(true)
+    try {
+      const replies = await getSmartReplies(channelId)
+      setSmartReplies(replies)
+    } catch {
+      toast.error('Could not generate suggestions')
+    } finally {
+      setLoadingReplies(false)
+    }
+  }
   const typingRef = useRef<ReturnType<typeof setTimeout>>()
 
   const filteredSlash = SLASH_COMMANDS.filter(c => c.cmd.includes(slashQuery.toLowerCase())).slice(0, 6)
@@ -123,6 +141,41 @@ export function MessageInput({
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 240) + 'px'
     }
   }
+
+  const appendTranscript = useCallback((transcript: string) => {
+    const trimmed = transcript.trim()
+    if (!trimmed) return
+    setContent(prev => (prev && !prev.endsWith(' ') ? `${prev} ${trimmed} ` : `${prev}${trimmed} `))
+
+    clearTimeout(typingRef.current)
+    onTypingStart()
+    typingRef.current = setTimeout(onTypingStop, 3000)
+
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 240) + 'px'
+        textareaRef.current.focus()
+      }
+    })
+  }, [onTypingStart, onTypingStop])
+
+  const {
+    isSupported: speechSupported,
+    isListening,
+    interimTranscript,
+    startListening,
+    stopListening,
+  } = useSpeechToText({
+    onFinalResult: appendTranscript,
+    onError: (error) => {
+      if (error === 'not-allowed' || error === 'service-not-allowed') {
+        toast.error('Microphone access denied')
+      } else if (error !== 'no-speech' && error !== 'aborted') {
+        toast.error('Voice typing failed')
+      }
+    },
+  })
 
   const insertMention = (memberId: string) => {
     const u = users[memberId]
@@ -183,6 +236,7 @@ export function MessageInput({
 
   const handleSend = async () => {
     if ((!content.trim() && pendingFiles.length === 0) || sending || disabled) return
+    if (isListening) stopListening()
     setSending(true)
     try {
       const attachments: Attachment[] = []
@@ -241,6 +295,32 @@ export function MessageInput({
 
   return (
     <div className="relative">
+      {/* Smart reply chips */}
+      <AnimatePresence>
+        {smartReplies.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="flex items-center gap-2 px-3 pb-2 flex-wrap"
+          >
+            <Sparkles size={12} className="text-yellow-400 shrink-0" />
+            {smartReplies.map((r, i) => (
+              <button
+                key={i}
+                onClick={() => { setContent(r); setSmartReplies([]); textareaRef.current?.focus() }}
+                className="px-2.5 py-1 text-xs bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 rounded-full hover:bg-yellow-500/20 transition-colors"
+              >
+                {r}
+              </button>
+            ))}
+            <button onClick={() => setSmartReplies([])} className="p-0.5 text-pulse-text-muted hover:text-white ml-auto">
+              <X size={12} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Voice recorder */}
       <AnimatePresence>
         {showVoice && (
@@ -252,6 +332,24 @@ export function MessageInput({
               onSent={() => setShowVoice(false)}
               onCancel={() => setShowVoice(false)}
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Voice-to-type listening indicator */}
+      <AnimatePresence>
+        {isListening && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="flex items-center gap-2 px-3 pb-2 text-xs text-pulse-text-muted"
+          >
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+            </span>
+            <span className="truncate">Listening{interimTranscript ? `: ${interimTranscript}` : '…'}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -323,12 +421,35 @@ export function MessageInput({
         />
 
         <div className="flex items-center gap-1 shrink-0 mb-0.5">
+          {user?.isPremium && channelId && (
+            <button
+              onClick={handleSmartReply}
+              disabled={loadingReplies}
+              title="AI smart replies (Premium)"
+              className="p-1 rounded-full text-yellow-400/70 hover:text-yellow-400 transition-colors disabled:opacity-50"
+            >
+              {loadingReplies ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
+            </button>
+          )}
           <button
             onClick={() => setShowEmoji(v => !v)}
             className="p-1 rounded-full text-pulse-text-muted hover:text-pulse-text-normal"
           >
             <Smile size={20} />
           </button>
+
+          {speechSupported && (
+            <button
+              onClick={() => (isListening ? stopListening() : startListening())}
+              title={isListening ? 'Stop voice typing' : 'Voice to type'}
+              className={cn(
+                'p-1 rounded-full transition-colors',
+                isListening ? 'text-red-400' : 'text-pulse-text-muted hover:text-pulse-text-normal'
+              )}
+            >
+              <Mic2 size={20} className={isListening ? 'animate-pulse' : ''} />
+            </button>
+          )}
 
           {content.trim() || pendingFiles.length > 0 ? (
             <button

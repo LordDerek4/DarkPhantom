@@ -11,11 +11,15 @@ export function useUser(userId: string | null) {
   useEffect(() => {
     if (!userId || users[userId]) return
 
-    const unsub = onSnapshot(doc(db, COLLECTIONS.USERS, userId), snap => {
-      if (snap.exists()) {
-        setUser({ uid: snap.id, ...snap.data() } as User)
-      }
-    })
+    const unsub = onSnapshot(
+      doc(db, COLLECTIONS.USERS, userId),
+      snap => {
+        if (snap.exists()) {
+          setUser({ uid: snap.id, ...snap.data() } as User)
+        }
+      },
+      err => console.error(`[useUser] Failed to load user ${userId}:`, err)
+    )
 
     return () => unsub()
   }, [userId])
@@ -31,11 +35,15 @@ export function useUsers(userIds: string[]) {
     if (missing.length === 0) return
 
     const unsubscribers = missing.map(userId =>
-      onSnapshot(doc(db, COLLECTIONS.USERS, userId), snap => {
-        if (snap.exists()) {
-          setUser({ uid: snap.id, ...snap.data() } as User)
-        }
-      })
+      onSnapshot(
+        doc(db, COLLECTIONS.USERS, userId),
+        snap => {
+          if (snap.exists()) {
+            setUser({ uid: snap.id, ...snap.data() } as User)
+          }
+        },
+        err => console.error(`[useUsers] Failed to load user ${userId}:`, err)
+      )
     )
 
     return () => unsubscribers.forEach(u => u())

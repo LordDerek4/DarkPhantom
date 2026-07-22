@@ -55,7 +55,10 @@ export function useDMMessages(dmChannelId: string | null) {
   const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
-    if (!dmChannelId) return
+    if (!dmChannelId) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
 
     const q = query(
@@ -65,10 +68,18 @@ export function useDMMessages(dmChannelId: string | null) {
       limit(50)
     )
 
-    const unsub = onSnapshot(q, snap => {
-      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() }) as DirectMessage))
-      setLoading(false)
-    })
+    const unsub = onSnapshot(
+      q,
+      snap => {
+        setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() }) as DirectMessage))
+        setLoading(false)
+      },
+      err => {
+        console.error('[useDMMessages] Firestore error:', err)
+        setMessages([])
+        setLoading(false)
+      }
+    )
 
     // Mark as read
     if (user) markDMRead(dmChannelId, user.uid)

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import toast from 'react-hot-toast'
 import {
   collection,
   query,
@@ -27,7 +28,10 @@ export function useMessages(channelId: string | null) {
 
   // Real-time subscription to latest messages
   useEffect(() => {
-    if (!channelId) return
+    if (!channelId) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setHasMore(true)
 
@@ -60,8 +64,14 @@ export function useMessages(channelId: string | null) {
           }
         })
       },
-      () => {
-        // Firestore denied or network error — stop loading so the UI isn't stuck
+      (err) => {
+        console.error('[useMessages] Firestore error:', err)
+        const code = (err as { code?: string }).code
+        if (code === 'permission-denied') {
+          toast.error('Could not load messages: permission denied. Try rejoining the server.')
+        } else if (code === 'failed-precondition') {
+          toast.error('Messages index not ready. Please wait a moment and refresh.')
+        }
         setMessages(channelId, [])
         setHasMore(false)
         setLoading(false)
