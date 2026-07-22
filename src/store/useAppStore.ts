@@ -57,11 +57,6 @@ interface AppState {
   // Online presence
   presences: Record<string, 'online' | 'idle' | 'dnd' | 'offline'>
 
-  // Calling
-  activeCallId: string | null
-  activeCallType: 'voice' | 'video' | null
-  incomingCall: { callId: string; initiatorId: string; type: 'voice' | 'video' } | null
-
   // Notifications
   notifications: Notification[]
   isNotificationsPanelOpen: boolean
@@ -145,15 +140,12 @@ interface AppActions {
   setPresence: (userId: string, status: 'online' | 'idle' | 'dnd' | 'offline') => void
   setPresences: (presences: Record<string, 'online' | 'idle' | 'dnd' | 'offline'>) => void
 
-  // Calling
-  setActiveCallId: (id: string | null) => void
-  setActiveCallType: (type: 'voice' | 'video' | null) => void
-  setIncomingCall: (call: { callId: string; initiatorId: string; type: 'voice' | 'video' } | null) => void
-
   // Notifications
   setNotifications: (notifications: Notification[]) => void
   markNotificationReadLocal: (id: string) => void
   markAllNotificationsReadLocal: () => void
+  deleteNotificationLocal: (id: string) => void
+  clearAllNotificationsLocal: () => void
   toggleNotificationsPanel: () => void
   closeNotificationsPanel: () => void
 
@@ -186,9 +178,6 @@ export const useAppStore = create<AppState & AppActions>()(
     isJoinServerOpen: false,
     isMobileSidebarOpen: false,
     isSearchOpen: false,
-    activeCallId: null,
-    activeCallType: null,
-    incomingCall: null,
     notifications: [],
     isNotificationsPanelOpen: false,
     showTutorial: false,
@@ -376,11 +365,6 @@ export const useAppStore = create<AppState & AppActions>()(
       set(s => ({ presences: { ...s.presences, [userId]: status } })),
     setPresences: presences => set(s => ({ presences: { ...s.presences, ...presences } })),
 
-    // Calling
-    setActiveCallId: id => set({ activeCallId: id }),
-    setActiveCallType: type => set({ activeCallType: type }),
-    setIncomingCall: call => set({ incomingCall: call }),
-
     // Notifications
     setNotifications: notifications => set({ notifications }),
     markNotificationReadLocal: id => set(s => ({
@@ -389,6 +373,10 @@ export const useAppStore = create<AppState & AppActions>()(
     markAllNotificationsReadLocal: () => set(s => ({
       notifications: s.notifications.map(n => ({ ...n, isRead: true })),
     })),
+    deleteNotificationLocal: id => set(s => ({
+      notifications: s.notifications.filter(n => n.id !== id),
+    })),
+    clearAllNotificationsLocal: () => set({ notifications: [] }),
     toggleNotificationsPanel: () => set(s => ({ isNotificationsPanelOpen: !s.isNotificationsPanelOpen })),
     closeNotificationsPanel: () => set({ isNotificationsPanelOpen: false }),
 
