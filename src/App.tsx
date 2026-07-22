@@ -60,7 +60,7 @@ function MainApp() {
   const { completeTutorial, skipTutorial } = useTutorial()
   const { user } = useAuth()
   const [showPremiumTutorial, setShowPremiumTutorial] = useState(false)
-  useTheme(user?.premiumTheme)
+  useTheme(user?.isPremium ? user?.premiumTheme : null)
 
   useEffect(() => {
     if (user?.isPremium && localStorage.getItem('premiumTutorialPending') === 'true') {

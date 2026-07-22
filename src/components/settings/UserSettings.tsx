@@ -170,7 +170,8 @@ export function UserSettings() {
         displayName: displayName.trim(),
         bio: bio.trim(),
         customStatus: customStatus.trim(),
-        ...(user.isPremium && { usernameGradient, profileAccentColor, premiumTheme }),
+        premiumTheme,
+        ...(user.isPremium && { usernameGradient, profileAccentColor }),
       })
       toast.success('Profile saved!')
     } catch {
@@ -1023,7 +1024,7 @@ export function UserSettings() {
                       )
                     })}
                   </div>
-                  {user?.isPremium && (
+                  {(user?.isPremium || !premiumTheme) && (
                     <button
                       onClick={() => handleSaveProfile()}
                       className="mt-3 flex items-center gap-2 px-4 py-2 bg-pulse-brand hover:bg-pulse-brand-hover text-white text-sm font-semibold rounded-xl transition-colors"
