@@ -9,6 +9,8 @@ import {
   subscribeToNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  deleteNotification,
+  clearAllNotifications,
 } from '@/services/notification.service'
 import { respondToFriendRequest, getFriendship } from '@/services/friends.service'
 import { Avatar } from '@/components/ui/Avatar'
@@ -25,15 +27,28 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   server_invite: <Bell size={14} />,
 }
 
-function NotificationRow({ n, onRead }: { n: Notification; onRead: (id: string) => void }) {
+function NotificationRow({
+  n,
+  onRead,
+  onDelete,
+}: {
+  n: Notification
+  onRead: (id: string) => void
+  onDelete: (id: string) => void
+}) {
   const sender = useUser(n.fromUserId)
-  const { setViewMode } = useAppStore()
 
   const handleClick = async () => {
     if (!n.isRead) {
       onRead(n.id)
       await markNotificationRead(n.id).catch(() => {})
     }
+  }
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete(n.id)
+    await deleteNotification(n.id).catch(() => {})
   }
 
   const time = n.createdAt
@@ -44,7 +59,7 @@ function NotificationRow({ n, onRead }: { n: Notification; onRead: (id: string) 
     <div
       onClick={handleClick}
       className={cn(
-        'flex items-start gap-3 px-4 py-3 hover:bg-white/[0.04] cursor-pointer transition-colors relative',
+        'group flex items-start gap-3 px-4 py-3 hover:bg-white/[0.04] cursor-pointer transition-colors relative',
         !n.isRead && 'bg-pulse-brand/5',
       )}
     >
@@ -85,6 +100,15 @@ function NotificationRow({ n, onRead }: { n: Notification; onRead: (id: string) 
           />
         )}
       </div>
+
+      {/* Delete button — visible on hover */}
+      <button
+        onClick={handleDelete}
+        className="opacity-0 group-hover:opacity-100 shrink-0 p-1 rounded hover:bg-white/10 text-pulse-text-muted hover:text-red-400 transition-all"
+        title="Delete notification"
+      >
+        <X size={13} />
+      </button>
     </div>
   )
 }
@@ -147,6 +171,8 @@ export function NotificationsPanel() {
     setNotifications,
     markNotificationReadLocal,
     markAllNotificationsReadLocal,
+    deleteNotificationLocal,
+    clearAllNotificationsLocal,
     closeNotificationsPanel,
   } = useAppStore()
 
@@ -176,6 +202,16 @@ export function NotificationsPanel() {
     if (!user?.uid) return
     markAllNotificationsReadLocal()
     await markAllNotificationsRead(user.uid).catch(() => {})
+  }
+
+  const handleClearAll = async () => {
+    if (!user?.uid) return
+    clearAllNotificationsLocal()
+    await clearAllNotifications(user.uid).catch(() => {})
+  }
+
+  const handleDeleteOne = (id: string) => {
+    deleteNotificationLocal(id)
   }
 
   return (
@@ -210,6 +246,14 @@ export function NotificationsPanel() {
                   Mark all read
                 </button>
               )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="text-xs text-red-400/70 hover:text-red-400 px-2 py-1 rounded hover:bg-red-500/10 transition-colors"
+                >
+                  Clear all
+                </button>
+              )}
               <button
                 onClick={closeNotificationsPanel}
                 className="p-1 rounded hover:bg-white/10 text-pulse-text-muted hover:text-white transition-colors"
@@ -234,6 +278,7 @@ export function NotificationsPanel() {
                   key={n.id}
                   n={n}
                   onRead={markNotificationReadLocal}
+                  onDelete={handleDeleteOne}
                 />
               ))
             )}

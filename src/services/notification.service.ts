@@ -3,6 +3,7 @@ import {
   doc,
   addDoc,
   updateDoc,
+  deleteDoc,
   getDocs,
   onSnapshot,
   query,
@@ -42,15 +43,8 @@ export async function createNotification(
     isRead: false,
     createdAt: serverTimestamp(),
   })
-
-  // Show browser notification if permission granted
-  if (Notification.permission === 'granted') {
-    new Notification(title, {
-      body,
-      icon: options.iconUrl ?? '/pulse-icon.svg',
-      tag: options.messageId ?? undefined,
-    })
-  }
+  // Browser notifications are shown by the recipient via subscribeToNotifications,
+  // NOT here — showing them here would pop up on the SENDER's browser.
 }
 
 export function subscribeToNotifications(
@@ -63,8 +57,27 @@ export function subscribeToNotifications(
     orderBy('createdAt', 'desc'),
     limit(50),
   )
+  let initialized = false
   return onSnapshot(q, snap => {
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Notification))
+    const notifications = snap.docs.map(d => ({ id: d.id, ...d.data() }) as Notification)
+    callback(notifications)
+
+    // Show browser notification for newly added unread notifications (not on initial load)
+    if (initialized && Notification.permission === 'granted') {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const n = change.doc.data() as Notification
+          if (!n.isRead) {
+            new Notification(n.title, {
+              body: n.body,
+              icon: n.iconUrl ?? '/pulse-icon.svg',
+              tag: change.doc.id,
+            })
+          }
+        }
+      })
+    }
+    initialized = true
   })
 }
 
@@ -81,6 +94,19 @@ export async function getUserNotifications(userId: string): Promise<Notification
 
 export async function markNotificationRead(notificationId: string): Promise<void> {
   await updateDoc(doc(db, COLLECTIONS.NOTIFICATIONS, notificationId), { isRead: true })
+}
+
+export async function deleteNotification(notificationId: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTIONS.NOTIFICATIONS, notificationId))
+}
+
+export async function clearAllNotifications(userId: string): Promise<void> {
+  const q = query(
+    collection(db, COLLECTIONS.NOTIFICATIONS),
+    where('userId', '==', userId),
+  )
+  const snap = await getDocs(q)
+  await Promise.all(snap.docs.map(d => deleteDoc(d.ref)))
 }
 
 export async function markAllNotificationsRead(userId: string): Promise<void> {
