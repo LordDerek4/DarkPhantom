@@ -51,11 +51,21 @@ export async function signInWithEmail(email: string, password: string): Promise<
 
 export async function signInWithGoogle(): Promise<FirebaseUser> {
   const { user } = await signInWithPopup(auth, googleProvider)
+  const fallbackName = user.email?.split('@')[0] ?? 'user'
 
   const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, user.uid))
   if (!userDoc.exists()) {
-    const username = sanitizeUsername(user.displayName ?? user.email?.split('@')[0] ?? 'user')
-    await createUserDocument(user, username, user.displayName ?? 'User')
+    const username = sanitizeUsername(user.displayName ?? fallbackName)
+    await createUserDocument(user, username, user.displayName ?? fallbackName)
+  } else {
+    // Self-heal accounts created before this fix, which got the literal string
+    // 'User' written as their permanent displayName when Google returned none at signup.
+    const existingName = (userDoc.data() as User).displayName
+    if ((!existingName || existingName === 'User') && (user.displayName || fallbackName)) {
+      await updateDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+        displayName: user.displayName ?? fallbackName,
+      })
+    }
   }
 
   await updateUserPresence(user.uid, 'online')

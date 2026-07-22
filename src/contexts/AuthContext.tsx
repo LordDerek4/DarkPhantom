@@ -26,7 +26,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, async fbUser => {
+    // Cleanup refs so we can properly tear down across auth state changes
+    let unsubUser: (() => void) | null = null
+    let handleUnload: (() => void) | null = null
+
+    const cleanup = () => {
+      unsubUser?.()
+      unsubUser = null
+      if (handleUnload) {
+        window.removeEventListener('beforeunload', handleUnload)
+        handleUnload = null
+      }
+    }
+
+    const unsubAuth = onAuthStateChanged(auth, fbUser => {
+      // Tear down previous session's listeners before setting up new ones
+      cleanup()
+
       setFirebaseUser(fbUser)
 
       if (!fbUser) {
@@ -38,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Subscribe to user document for real-time updates
       const userRef = doc(db, COLLECTIONS.USERS, fbUser.uid)
-      const unsubUser = onSnapshot(userRef, snap => {
+      unsubUser = onSnapshot(userRef, snap => {
         if (snap.exists()) {
           setCurrentUser({ uid: snap.id, ...snap.data() } as User)
         } else {
@@ -48,23 +64,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setInitialized(true)
       })
 
-      // Restore saved status (dnd/idle) or default to online — but never restore 'offline' (invisible)
-      const userSnap = await getDoc(doc(db, COLLECTIONS.USERS, fbUser.uid))
-      const savedStatus = userSnap.data()?.status as UserStatus | undefined
-      const initialStatus: UserStatus = (savedStatus && savedStatus !== 'offline') ? savedStatus : 'online'
-      await updatePresence(fbUser.uid, initialStatus)
+      // Set online on login, offline on tab close — async work runs outside the callback
+      const uid = fbUser.uid
+      getDoc(doc(db, COLLECTIONS.USERS, uid)).then(userSnap => {
+        const savedStatus = userSnap.data()?.status as UserStatus | undefined
+        const initialStatus: UserStatus = (savedStatus && savedStatus !== 'offline') ? savedStatus : 'online'
+        updatePresence(uid, initialStatus)
+      })
 
-      // Set offline on tab close
-      const handleUnload = () => updatePresence(fbUser.uid, 'offline')
+      handleUnload = () => updatePresence(uid, 'offline')
       window.addEventListener('beforeunload', handleUnload)
-
-      return () => {
-        unsubUser()
-        window.removeEventListener('beforeunload', handleUnload)
-      }
     })
 
-    return () => unsubAuth()
+    return () => {
+      unsubAuth()
+      cleanup()
+    }
   }, [])
 
   return (

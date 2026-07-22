@@ -44,6 +44,9 @@ export function useAuth() {
     displayName?: string
     bio?: string
     customStatus?: string
+    usernameGradient?: string | null
+    profileAccentColor?: string | null
+    premiumTheme?: string | null
   }) => {
     if (!currentUser) throw new Error('Not authenticated')
     return updateUserProfile(currentUser.uid, updates)

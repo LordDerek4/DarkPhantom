@@ -55,8 +55,19 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       await googleSignIn()
       toast.success('Welcome back!')
     } catch (err: unknown) {
-      const error = err as { message?: string }
-      toast.error(error.message ?? 'Google sign-in failed')
+      const error = err as { code?: string; message?: string }
+      if (error.code === 'auth/unauthorized-domain') {
+        toast.error(
+          'Google sign-in is not enabled for this domain. The site owner needs to add this URL to the Firebase authorized domains list.',
+          { duration: 6000 }
+        )
+      } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        // User dismissed the popup — no toast needed
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error('Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.')
+      } else {
+        toast.error(error.message ?? 'Google sign-in failed')
+      }
     } finally {
       setGoogleLoading(false)
     }
