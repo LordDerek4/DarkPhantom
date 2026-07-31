@@ -88,6 +88,22 @@ const TEMPLATES = [
     rules: ['Cite your sources', 'Be evidence-based', 'Respectful debate only', 'No pseudoscience'],
   },
   {
+    id: 'debates', label: 'Debates', icon: '🗣️',
+    description: 'Structured discussion and healthy disagreement',
+    color: '#e67e22',
+    channels: ['general', 'debate-topics', 'rules-and-format', 'off-topic'],
+    features: ['threads', 'events'],
+    rules: ['Attack ideas, not people', 'No personal insults or name-calling', 'Cite sources when you can', 'Stay on topic'],
+  },
+  {
+    id: 'politics', label: 'Politics', icon: '🏛️',
+    description: 'Discuss policy and current events — all viewpoints welcome',
+    color: '#607d8b',
+    channels: ['general', 'current-events', 'policy-discussion', 'off-topic'],
+    features: ['threads', 'events'],
+    rules: ['Be respectful of differing views', 'No personal attacks or harassment', 'Focus on policy, not partisanship', 'Cite credible sources'],
+  },
+  {
     id: 'custom', label: 'Custom', icon: '✨',
     description: 'Build from scratch with full control',
     color: '#ef4444',
@@ -236,6 +252,8 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     tech: 'technology',
     business: 'business',
     science: 'science',
+    debates: 'debates',
+    politics: 'politics',
     custom: 'custom',
   }
 
