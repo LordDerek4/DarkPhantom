@@ -101,7 +101,7 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
                 autoFocus
                 value={inviteCode}
                 onChange={e => setInviteCode(e.target.value)}
-                placeholder="123456"
+                placeholder="Enter invite code"
                 className="w-full bg-pulse-bg-primary border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-pulse-text-normal placeholder:text-pulse-text-muted focus:border-pulse-brand/50 focus:outline-none transition-colors font-mono"
               />
             </div>
