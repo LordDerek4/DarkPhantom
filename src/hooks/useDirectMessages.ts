@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore'
+import toast from 'react-hot-toast'
 import { db, COLLECTIONS } from '@/services/firebase'
 import {
   getOrCreateDMChannel,
@@ -76,6 +77,12 @@ export function useDMMessages(dmChannelId: string | null) {
       },
       err => {
         console.error('[useDMMessages] Firestore error:', err)
+        const code = (err as { code?: string }).code
+        if (code === 'permission-denied') {
+          toast.error('Could not load messages: permission denied.')
+        } else if (code === 'failed-precondition') {
+          toast.error('Messages index not ready. Please wait a moment and refresh.')
+        }
         setMessages([])
         setLoading(false)
       }
