@@ -127,5 +127,7 @@ export const SERVER_CATEGORIES = [
   { id: 'business', label: 'Business', emoji: '💼' },
   { id: 'science', label: 'Science', emoji: '🔬' },
   { id: 'entertainment', label: 'Entertainment', emoji: '🎬' },
+  { id: 'debates', label: 'Debates', emoji: '🗣️' },
+  { id: 'politics', label: 'Politics', emoji: '🏛️' },
   { id: 'custom', label: 'Custom', emoji: '✨' },
 ]
