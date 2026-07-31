@@ -380,6 +380,9 @@ export interface ServerListing {
   inviteCode: string
   weeklyGrowth: number
   engagementScore: number
+  isPaid?: boolean
+  priceAmount?: number | null
+  priceCurrency?: string
   createdAt: Timestamp
   updatedAt: Timestamp
 }

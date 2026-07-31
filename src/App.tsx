@@ -28,6 +28,9 @@ import { useTutorial } from '@/hooks/useTutorial'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { SubscriptionSuccessPage, SubscriptionCancelPage } from '@/pages/SubscriptionSuccessPage'
+import { CommunityPaymentSuccessPage, CommunityPaymentCancelPage } from '@/pages/CommunityPaymentPage'
+import { checkConnectStatus } from '@/services/monetization.service'
+import toast from 'react-hot-toast'
 
 const DiscoverPage = lazy(() => import('@/components/discover/DiscoverPage').then(m => ({ default: m.DiscoverPage })))
 const FriendsPanel = lazy(() => import('@/components/friends/FriendsPanel').then(m => ({ default: m.FriendsPanel })))
@@ -55,7 +58,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function MainApp() {
-  const { viewMode, isCreateCommunityOpen, closeCreateCommunity, isJoinServerOpen, openJoinServer, closeJoinServer, showTutorial } = useAppStore()
+  const { viewMode, isCreateCommunityOpen, closeCreateCommunity, isJoinServerOpen, openJoinServer, closeJoinServer, showTutorial, setServerSettingsId } = useAppStore()
   const [joinInviteCode, setJoinInviteCode] = useState('')
   const { completeTutorial, skipTutorial } = useTutorial()
   const { user } = useAuth()
@@ -77,6 +80,29 @@ function MainApp() {
       sessionStorage.removeItem('pendingInvite')
       setJoinInviteCode(pending)
       openJoinServer()
+    }
+
+    // Returning from Stripe Connect onboarding (either finished or just
+    // hit "refresh" mid-flow) — force a fresh status check rather than
+    // waiting on the account.updated webhook, and jump straight to the
+    // Monetization tab so the result is visible immediately.
+    const url = new URL(window.location.href)
+    const monetizationServerId = url.searchParams.get('monetization_return') ?? url.searchParams.get('monetization_refresh')
+    if (monetizationServerId) {
+      url.searchParams.delete('monetization_return')
+      url.searchParams.delete('monetization_refresh')
+      window.history.replaceState({}, '', url.toString())
+
+      setServerSettingsId(monetizationServerId)
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('server-settings-monetization', { detail: monetizationServerId }))
+      }, 80)
+
+      checkConnectStatus(monetizationServerId)
+        .then(status => {
+          if (status.onboardingComplete) toast.success('Stripe account connected!')
+        })
+        .catch(() => {})
     }
   }, [])
 
@@ -125,6 +151,8 @@ export default function App() {
         {/* Subscription redirects — must be authenticated */}
         <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccessPage /></ProtectedRoute>} />
         <Route path="/subscription/cancel" element={<ProtectedRoute><SubscriptionCancelPage /></ProtectedRoute>} />
+        <Route path="/community-payment/success" element={<ProtectedRoute><CommunityPaymentSuccessPage /></ProtectedRoute>} />
+        <Route path="/community-payment/cancel" element={<ProtectedRoute><CommunityPaymentCancelPage /></ProtectedRoute>} />
         {/* Landing page for unauthenticated visitors */}
         <Route path="/" element={<LandingOrApp />} />
         {/* App — all sub-paths */}

@@ -248,6 +248,17 @@ export async function joinServer(userId: string, inviteCode: string): Promise<Se
     return { id: serverSnap.id, ...serverSnap.data() } as Server
   }
 
+  // Paid communities can't be joined for free via a regular invite code —
+  // otherwise anyone with the server's default/shared invite link bypasses
+  // payment entirely. They must go through startCommunityCheckout(), which
+  // grants membership via the Stripe webhook after payment succeeds. This
+  // only applies to brand-new joins (the already-a-member check above has
+  // already returned by this point for existing members).
+  const settingsSnap = await getDoc(doc(db, 'communitySettings', invite.serverId))
+  if (settingsSnap.exists() && settingsSnap.data().isPaid) {
+    throw new Error('This is a paid community — join it from Discover to pay and get access')
+  }
+
   // Get server
   const serverSnap = await getDoc(doc(db, COLLECTIONS.SERVERS, invite.serverId))
   if (!serverSnap.exists()) throw new Error('Server not found')

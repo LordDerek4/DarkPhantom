@@ -27,6 +27,10 @@ export function formatFullDateTime(timestamp: Timestamp): string {
   return format(timestamp.toDate(), 'PPpp')
 }
 
+export function formatPrice(amountCents: number, currency = 'usd'): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(amountCents / 100)
+}
+
 export function generateInviteCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }

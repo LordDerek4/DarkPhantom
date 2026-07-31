@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Compass, Users, ArrowRight } from 'lucide-react'
+import { Search, Compass, Users, ArrowRight, Lock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getFeaturedServers, getTrendingServers } from '@/services/discover.service'
 import { joinServer } from '@/services/server.service'
+import { startCommunityCheckout } from '@/services/monetization.service'
+import { cn, formatPrice } from '@/utils/helpers'
 import type { ServerListing } from '@/types/extended'
 import toast from 'react-hot-toast'
 
@@ -32,7 +34,20 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
     : servers
 
   const handleJoin = async (server: ServerListing) => {
-    if (!user || !server.inviteCode) {
+    if (!user) return
+
+    if (server.isPaid) {
+      setJoiningId(server.id)
+      try {
+        await startCommunityCheckout(server.id)
+      } catch (err: unknown) {
+        toast.error((err as Error).message ?? 'Failed to start checkout')
+        setJoiningId(null)
+      }
+      return
+    }
+
+    if (!server.inviteCode) {
       toast.error('No invite link available for this community')
       return
     }
@@ -120,10 +135,15 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
                     <button
                       onClick={() => handleJoin(server)}
                       disabled={isJoining}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-pulse-brand hover:bg-pulse-brand-hover disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
+                      className={cn(
+                        'flex items-center gap-1 px-3 py-1.5 disabled:opacity-50 text-xs font-semibold rounded-lg transition-colors',
+                        server.isPaid ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-pulse-brand hover:bg-pulse-brand-hover text-white'
+                      )}
                     >
                       {isJoining ? (
-                        <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className={cn('w-3 h-3 border border-t-white rounded-full animate-spin', server.isPaid ? 'border-yellow-400/30' : 'border-white/30')} />
+                      ) : server.isPaid && server.priceAmount != null ? (
+                        <><Lock size={10} />{formatPrice(server.priceAmount, server.priceCurrency)}</>
                       ) : (
                         <>Join <ArrowRight size={10} /></>
                       )}

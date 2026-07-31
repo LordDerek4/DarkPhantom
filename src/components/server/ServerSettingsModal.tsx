@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Camera, Trash2, LogOut, Settings, Link, AlertTriangle, Check, Users, Crown, MoreVertical, Globe, Lock } from 'lucide-react'
+import { X, Camera, Trash2, LogOut, Settings, Link, AlertTriangle, Check, Users, Crown, MoreVertical, Globe, Lock, DollarSign } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
@@ -10,10 +10,11 @@ import { updateServer, deleteServer, leaveServer, transferOwnership } from '@/se
 import { syncDiscoverListing } from '@/services/discover.service'
 import { uploadServerIcon, uploadServerBanner, validateImageFile } from '@/services/storage.service'
 import { InviteModal } from '@/components/server/InviteModal'
+import { MonetizationTab } from '@/components/server/MonetizationTab'
 import { Avatar } from '@/components/ui/Avatar'
 import toast from 'react-hot-toast'
 
-type Tab = 'overview' | 'members' | 'danger'
+type Tab = 'overview' | 'members' | 'monetization' | 'danger'
 
 export function ServerSettingsModal() {
   const { serverSettingsId, setServerSettingsId, servers, removeServer, setViewMode, channels } = useAppStore()
@@ -69,11 +70,16 @@ export function ServerSettingsModal() {
     const onInvite = (e: Event) => {
       if ((e as CustomEvent<string>).detail === serverSettingsId) setShowInvite(true)
     }
+    const onMonetization = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === serverSettingsId) setTab('monetization')
+    }
     window.addEventListener('server-settings-danger', onDanger)
     window.addEventListener('server-settings-invite', onInvite)
+    window.addEventListener('server-settings-monetization', onMonetization)
     return () => {
       window.removeEventListener('server-settings-danger', onDanger)
       window.removeEventListener('server-settings-invite', onInvite)
+      window.removeEventListener('server-settings-monetization', onMonetization)
     }
   }, [serverSettingsId])
 
@@ -228,6 +234,7 @@ export function ServerSettingsModal() {
   const sidebarItems: { id: Tab; label: string; icon: React.ElementType; danger?: boolean }[] = [
     { id: 'overview', label: 'Overview', icon: Settings },
     { id: 'members', label: 'Members', icon: Users },
+    ...(isOwner ? [{ id: 'monetization' as Tab, label: 'Monetization', icon: DollarSign }] : []),
     ...(isOwner ? [{ id: 'danger' as Tab, label: 'Delete Server', icon: Trash2, danger: true }] : []),
   ]
 
@@ -584,6 +591,11 @@ export function ServerSettingsModal() {
                 )}
               </AnimatePresence>
             </div>
+          )}
+
+          {/* Monetization */}
+          {tab === 'monetization' && isOwner && (
+            <MonetizationTab serverId={server.id} />
           )}
 
           {/* Delete */}

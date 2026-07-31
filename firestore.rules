@@ -290,11 +290,31 @@ service cloud.firestore {
     match /serverListings/{serverId} { allow read: if true; allow write: if isAuth(); }
     match /communitySettings/{serverId} {
       allow read: if isAuth();
-      allow write: if isAuth() && (resource == null || resource.data.createdBy == request.auth.uid || isOwner(serverId));
+      // stripeAccountId/stripeOnboardingComplete are server-only (set by
+      // connect-onboard.ts / the webhook via the Admin SDK, which bypasses
+      // these rules) — a client write that touches either field is
+      // rejected, same pattern as users.isPremium below. Without this, an
+      // owner could point their own community's payouts at any Stripe
+      // Connect account already linked to this platform, not just their own.
+      allow create: if isAuth() &&
+        !('stripeAccountId' in request.resource.data) &&
+        !('stripeOnboardingComplete' in request.resource.data);
+      allow update: if isAuth() && (resource.data.createdBy == request.auth.uid || isOwner(serverId)) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'stripeAccountId', 'stripeOnboardingComplete'
+        ]);
+      allow delete: if isAuth() && (resource.data.createdBy == request.auth.uid || isOwner(serverId));
     }
     match /communityRules/{serverId} {
       allow read: if isAuth();
       allow write: if isAuth() && (isOwner(serverId) || isMember(serverId));
+    }
+    match /communityPayments/{paymentId} {
+      // Written only by the Stripe webhook via the Admin SDK (bypasses
+      // rules) — clients can read their own payment or, if they own the
+      // community, every payment into it, but never write.
+      allow read: if isAuth() && (resource.data.userId == request.auth.uid || isOwner(resource.data.serverId));
+      allow write: if false;
     }
     match /marketplace/{pluginId} { allow read: if isAuth(); allow write: if isAuth(); }
   }

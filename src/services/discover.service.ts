@@ -70,11 +70,15 @@ export async function syncDiscoverListing(
     return
   }
 
-  // Category is set at creation time (communitySettings.category) regardless
-  // of privacy, so it survives even though a private server never got a
-  // listing to store it in.
+  // Category (and pricing, if set while private) is stored on
+  // communitySettings regardless of privacy, so it survives even though a
+  // private server never got a listing to store it in.
   const settingsSnap = await getDoc(doc(db, 'communitySettings', serverId))
-  const category = (settingsSnap.exists() && (settingsSnap.data().category as string)) || 'social'
+  const settingsData = settingsSnap.exists() ? settingsSnap.data() : {}
+  const category = (settingsData.category as string) || 'social'
+  const isPaid = !!settingsData.isPaid
+  const priceAmount = (settingsData.priceAmount as number | undefined) ?? null
+  const priceCurrency = (settingsData.priceCurrency as string) || 'usd'
 
   const invitesSnap = await getDocs(
     query(collection(db, COLLECTIONS.INVITES), where('serverId', '==', serverId), limit(1))
@@ -98,6 +102,9 @@ export async function syncDiscoverListing(
     inviteCode,
     isFeatured: false,
     isVerified: false,
+    isPaid,
+    priceAmount,
+    priceCurrency,
   })
 }
 

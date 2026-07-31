@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Search, Compass, TrendingUp, Star, Users, ArrowRight, Loader } from 'lucide-react'
+import { Search, Compass, TrendingUp, Star, Users, ArrowRight, Loader, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { cn } from '@/utils/helpers'
+import { cn, formatPrice } from '@/utils/helpers'
 import { getFeaturedServers, getTrendingServers, searchServers, SERVER_CATEGORIES } from '@/services/discover.service'
 import { joinServer } from '@/services/server.service'
+import { startCommunityCheckout } from '@/services/monetization.service'
 import { useAuth } from '@/hooks/useAuth'
 import { useAppStore } from '@/store/useAppStore'
 import type { ServerListing } from '@/types/extended'
@@ -65,9 +66,16 @@ function ServerCard({ server, onJoin, joining }: { server: ServerListing; onJoin
               <span>{server.memberCount.toLocaleString()}</span>
             </div>
           </div>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-pulse-bg-primary text-pulse-text-muted">
-            {server.category}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {server.isPaid && server.priceAmount != null && (
+              <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 font-semibold">
+                <Lock size={9} />{formatPrice(server.priceAmount, server.priceCurrency)}
+              </span>
+            )}
+            <span className="text-xs px-2 py-0.5 rounded-full bg-pulse-bg-primary text-pulse-text-muted">
+              {server.category}
+            </span>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -90,7 +98,22 @@ export function DiscoverPage() {
   // place. Routing this through the code-entry modal would visibly expose
   // the raw invite code in a text field for no reason.
   const handleJoin = async (server: ServerListing) => {
-    if (!user || !server.inviteCode || joiningId) return
+    if (!user || joiningId) return
+
+    // Paid communities go through Stripe Checkout — membership is granted
+    // by the webhook once payment completes, not here.
+    if (server.isPaid) {
+      setJoiningId(server.id)
+      try {
+        await startCommunityCheckout(server.id)
+      } catch (err: unknown) {
+        toast.error((err as Error).message ?? 'Failed to start checkout')
+        setJoiningId(null)
+      }
+      return
+    }
+
+    if (!server.inviteCode) return
     setJoiningId(server.id)
     try {
       const joined = await joinServer(user.uid, server.inviteCode)

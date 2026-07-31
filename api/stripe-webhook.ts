@@ -43,11 +43,61 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return snap.empty ? null : snap.docs[0].id
     }
 
+    const grantCommunityMembership = async (session: Stripe.Checkout.Session) => {
+      const uid = session.metadata?.firebaseUid
+      const serverId = session.metadata?.serverId
+      if (!uid || !serverId) return
+
+      const memberRef = db.collection('serverMembers').doc(`${serverId}_${uid}`)
+      const memberSnap = await memberRef.get()
+      if (memberSnap.exists) return // already granted — webhook retry, no-op
+
+      const rolesSnap = await db.collection('roles')
+        .where('serverId', '==', serverId).where('isDefault', '==', true).limit(1).get()
+      const everyoneRoleId = rolesSnap.docs[0]?.id ?? `${serverId}_everyone`
+
+      const batch = db.batch()
+      batch.set(memberRef, {
+        userId: uid, serverId, roles: [everyoneRoleId], nickname: null,
+        joinedAt: FieldValue.serverTimestamp(), mutedUntil: null,
+        isBanned: false, isMuted: false, isDeafened: false,
+      })
+      batch.set(db.collection('userServers').doc(`${uid}_${serverId}`), {
+        userId: uid, serverId, joinedAt: FieldValue.serverTimestamp(),
+      })
+      batch.set(db.collection('communityPayments').doc(session.id), {
+        serverId, userId: uid,
+        amount: session.amount_total ?? 0,
+        currency: session.currency ?? 'usd',
+        stripeSessionId: session.id,
+        stripePaymentIntentId: session.payment_intent as string ?? null,
+        createdAt: FieldValue.serverTimestamp(),
+      })
+      batch.update(db.collection('servers').doc(serverId), { memberCount: FieldValue.increment(1) })
+      // Unlike the client-side joinServer(), the Admin SDK bypasses Firestore
+      // rules entirely, so there's no need to split the memberCount update
+      // into a separate step the way the client code has to.
+      await batch.commit()
+    }
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const s = event.data.object as Stripe.Checkout.Session
-        if (s.metadata?.firebaseUid && s.subscription)
+        if (s.metadata?.type === 'community_join') {
+          await grantCommunityMembership(s)
+        } else if (s.metadata?.firebaseUid && s.subscription) {
           await setUserPremium(s.metadata.firebaseUid, s.subscription as string, true)
+        }
+        break
+      }
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account
+        const settingsSnap = await db.collection('communitySettings')
+          .where('stripeAccountId', '==', account.id).limit(1).get()
+        if (!settingsSnap.empty) {
+          const onboardingComplete = !!account.charges_enabled && !!account.payouts_enabled
+          await settingsSnap.docs[0].ref.update({ stripeOnboardingComplete: onboardingComplete })
+        }
         break
       }
       case 'customer.subscription.deleted': {
