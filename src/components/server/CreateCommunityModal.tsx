@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone'
 import {
   X, ChevronLeft, ChevronRight, Check, Upload, Camera,
   Globe, Lock, Link, Sparkles, Mic, BarChart2, CalendarDays,
-  MessageSquare, Trophy, Shield, Plus, Trash2, Users, Zap,
+  MessageSquare, Trophy, Plus, Trash2, Users, Zap,
   Compass, Search, ArrowRight,
 } from 'lucide-react'
 import { cn } from '@/utils/helpers'
@@ -106,13 +106,6 @@ const FEATURE_OPTIONS = [
   { id: 'leaderboard', label: 'XP & Ranks', icon: Trophy, description: 'Gamification and leaderboards' },
 ]
 
-const VERIFICATION_LEVELS = [
-  { id: 'none', label: 'None', description: 'Unrestricted' },
-  { id: 'low', label: 'Low', description: 'Email verified' },
-  { id: 'medium', label: 'Medium', description: 'Phone verified' },
-  { id: 'high', label: 'High', description: '10+ min member' },
-]
-
 const ACCENT_COLORS = [
   '#ef4444', '#eb459e', '#3ba55c', '#faa61a',
   '#ed4245', '#00b0f4', '#9b59b6', '#e67e22',
@@ -130,7 +123,6 @@ interface CommunityForm {
   description: string
   accentColor: string
   privacy: Privacy
-  verificationLevel: string
   ageRestricted: boolean
   features: string[]
   channels: string[]
@@ -160,7 +152,6 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     description: '',
     accentColor: '#ef4444',
     privacy: 'public',
-    verificationLevel: 'none',
     ageRestricted: false,
     features: [],
     channels: ['general'],
@@ -226,7 +217,7 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     setMode('create')
     setForm({
       template: '', name: '', description: '', accentColor: '#ef4444',
-      privacy: 'public', verificationLevel: 'none', ageRestricted: false,
+      privacy: 'public', ageRestricted: false,
       features: [], channels: ['general'],
       rules: ['Be respectful to all members', 'No harassment or hate speech'],
       iconFile: null, iconPreview: null, bannerFile: null, bannerPreview: null,
@@ -266,7 +257,6 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
         description: form.description,
         accentColor: form.accentColor,
         privacy: form.privacy,
-        verificationLevel: form.verificationLevel,
         ageRestricted: form.ageRestricted,
         features: form.features,
         bannerUrl,
@@ -833,27 +823,6 @@ function FeaturesStep({ form, update }: { form: CommunityForm; update: (p: Parti
               </button>
             )
           })}
-        </div>
-      </div>
-
-      {/* Verification level */}
-      <div className="mb-5">
-        <label className="block text-xs font-semibold text-pulse-text-muted uppercase tracking-wide mb-2">Verification Level</label>
-        <div className="grid grid-cols-4 gap-2">
-          {VERIFICATION_LEVELS.map(v => (
-            <button
-              key={v.id}
-              onClick={() => update({ verificationLevel: v.id })}
-              className={cn(
-                'flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border text-center transition-all',
-                form.verificationLevel === v.id ? 'border-pulse-brand/50 bg-pulse-brand/10' : 'border-white/5 bg-pulse-bg-primary hover:bg-white/5'
-              )}
-            >
-              <Shield size={14} className={form.verificationLevel === v.id ? 'text-pulse-brand' : 'text-pulse-text-muted'} />
-              <span className="text-xs font-medium text-pulse-text-normal">{v.label}</span>
-              <span className="text-[10px] text-pulse-text-muted">{v.description}</span>
-            </button>
-          ))}
         </div>
       </div>
 

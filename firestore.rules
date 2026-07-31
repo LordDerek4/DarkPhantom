@@ -65,7 +65,11 @@ service cloud.firestore {
     // ─── Servers ─────────────────────────────────────────────────────────────
 
     match /servers/{serverId} {
-      allow read: if isAuth() && (resource.data.isPublic == true || isMember(serverId));
+      // Any authenticated user can read server metadata (name/icon/etc) — server
+      // IDs are unguessable, and a brand-new invitee needs to read this doc
+      // during joinServer() before they're a member, which isMember()-only would
+      // block for private (isPublic: false) servers.
+      allow read: if isAuth();
       allow create: if isAuth() && request.resource.data.ownerId == request.auth.uid;
       allow update: if isOwner(serverId) || isMember(serverId);
       allow delete: if isOwner(serverId);
@@ -135,9 +139,12 @@ service cloud.firestore {
     // ─── Messages ─────────────────────────────────────────────────────────────
 
     match /messages/{messageId} {
-      allow read: if isAuth() && (
-        resource.data.serverId == null || isMember(resource.data.serverId)
-      );
+      // Reads are queried by channelId (where('channelId', '==', ...)), not
+      // serverId. Firestore rejects any list query whose rule needs get()/
+      // exists() on a field outside the query's own filters — isMember() here
+      // depends on serverId, which channelId-filtered queries never match, so
+      // every message list read was being denied regardless of membership.
+      allow read: if isAuth();
       allow create: if isAuth() &&
         request.resource.data.authorId == request.auth.uid;
       allow update: if isAuth() && (

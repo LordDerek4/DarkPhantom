@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Camera, Trash2, LogOut, Settings, Link, AlertTriangle, Check, Users, Crown, MoreVertical } from 'lucide-react'
+import { X, Camera, Trash2, LogOut, Settings, Link, AlertTriangle, Check, Users, Crown, MoreVertical, Globe, Lock } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
@@ -32,6 +32,7 @@ export function ServerSettingsModal() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [accentColor, setAccentColor] = useState<string | null>(null)
+  const [isPublic, setIsPublic] = useState(true)
   const [saving, setSaving] = useState(false)
   const [iconPreview, setIconPreview] = useState<string | null>(null)
   const [iconFile, setIconFile] = useState<File | null>(null)
@@ -46,6 +47,7 @@ export function ServerSettingsModal() {
       setName(server.name)
       setDescription(server.description ?? '')
       setAccentColor(server.accentColor ?? null)
+      setIsPublic(server.isPublic)
       setIconPreview(server.iconUrl)
       setIconFile(null)
       setDeleteConfirm('')
@@ -97,6 +99,7 @@ export function ServerSettingsModal() {
         description: description.trim(),
         iconUrl,
         accentColor,
+        isPublic,
       })
       toast.success('Server updated!')
       setIconFile(null)
@@ -167,7 +170,13 @@ export function ServerSettingsModal() {
     }
   }
 
-  const isDirty = server && (name !== server.name || description !== (server.description ?? '') || !!iconFile || accentColor !== (server.accentColor ?? null))
+  const isDirty = server && (
+    name !== server.name ||
+    description !== (server.description ?? '') ||
+    !!iconFile ||
+    accentColor !== (server.accentColor ?? null) ||
+    isPublic !== server.isPublic
+  )
 
   if (!serverSettingsId || !server) return null
 
@@ -318,11 +327,48 @@ export function ServerSettingsModal() {
                 />
               </div>
 
-              {/* Server Boost Accent Colour — premium owner only */}
-              {isOwner && user?.isPremium && (
+              {/* Privacy */}
+              {isOwner && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-pulse-text-muted mb-2">
+                    Privacy
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setIsPublic(true)}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-colors',
+                        isPublic ? 'border-pulse-brand/50 bg-pulse-brand/10' : 'border-white/5 hover:bg-white/5'
+                      )}
+                    >
+                      <Globe size={15} className={isPublic ? 'text-pulse-brand' : 'text-pulse-text-muted'} />
+                      <div>
+                        <p className="text-xs font-medium text-pulse-text-normal">Public</p>
+                        <p className="text-[10px] text-pulse-text-muted">Listed in Discover, anyone can join</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setIsPublic(false)}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-colors',
+                        !isPublic ? 'border-pulse-brand/50 bg-pulse-brand/10' : 'border-white/5 hover:bg-white/5'
+                      )}
+                    >
+                      <Lock size={15} className={!isPublic ? 'text-pulse-brand' : 'text-pulse-text-muted'} />
+                      <div>
+                        <p className="text-xs font-medium text-pulse-text-normal">Private</p>
+                        <p className="text-[10px] text-pulse-text-muted">Invite link required to join</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Server Accent Colour */}
+              {isOwner && (
                 <div>
                   <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-pulse-text-muted mb-2">
-                    <span className="text-yellow-400">★</span> Server Accent Colour (Premium)
+                    Server Accent Colour
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {[null, '#ef4444', '#a855f7', '#3b82f6', '#22c55e', '#f97316', '#eab308', '#ec4899', '#14b8a6'].map(c => (
