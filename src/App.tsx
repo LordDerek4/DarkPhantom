@@ -80,11 +80,6 @@ function MainApp() {
     }
   }, [])
 
-  const handleJoinServer = (inviteCode: string) => {
-    setJoinInviteCode(inviteCode)
-    openJoinServer()
-  }
-
   return (
     <AppLayout>
       {viewMode === 'home' && <HomeScreen />}
@@ -92,7 +87,7 @@ function MainApp() {
       {viewMode === 'dm' && <DMArea />}
       {viewMode === 'discover' && (
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-pulse-brand border-t-transparent rounded-full" /></div>}>
-          <DiscoverPage onJoinServer={handleJoinServer} />
+          <DiscoverPage />
         </Suspense>
       )}
       {viewMode === 'friends' && (

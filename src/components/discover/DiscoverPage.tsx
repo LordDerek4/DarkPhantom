@@ -3,16 +3,28 @@ import { Search, Compass, TrendingUp, Star, Users, ArrowRight, Loader } from 'lu
 import { motion } from 'framer-motion'
 import { cn } from '@/utils/helpers'
 import { getFeaturedServers, getTrendingServers, searchServers, SERVER_CATEGORIES } from '@/services/discover.service'
+import { joinServer } from '@/services/server.service'
+import { useAuth } from '@/hooks/useAuth'
+import { useAppStore } from '@/store/useAppStore'
 import type { ServerListing } from '@/types/extended'
+import toast from 'react-hot-toast'
 
-function ServerCard({ server, onJoin }: { server: ServerListing; onJoin: (server: ServerListing) => void }) {
+function ServerCard({ server, onJoin, joining }: { server: ServerListing; onJoin: (server: ServerListing) => void; joining: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group bg-pulse-bg-secondary rounded-xl overflow-hidden hover:ring-1 hover:ring-pulse-brand/30 transition-all cursor-pointer"
+      className={cn(
+        'group bg-pulse-bg-secondary rounded-xl overflow-hidden hover:ring-1 hover:ring-pulse-brand/30 transition-all cursor-pointer relative',
+        joining && 'opacity-60 pointer-events-none'
+      )}
       onClick={() => onJoin(server)}
     >
+      {joining && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30">
+          <Loader size={20} className="animate-spin text-white" />
+        </div>
+      )}
       {server.bannerUrl ? (
         <div className="h-20 relative">
           <img src={server.bannerUrl} alt="" className="w-full h-full object-cover" />
@@ -62,15 +74,35 @@ function ServerCard({ server, onJoin }: { server: ServerListing; onJoin: (server
   )
 }
 
-interface DiscoverPageProps { onJoinServer: (inviteCode: string) => void }
-
-export function DiscoverPage({ onJoinServer }: DiscoverPageProps) {
+export function DiscoverPage() {
+  const { user } = useAuth()
+  const { setActiveServer, setViewMode } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [servers, setServers] = useState<ServerListing[]>([])
   const [featured, setFeatured] = useState<ServerListing[]>([])
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
+  const [joiningId, setJoiningId] = useState<string | null>(null)
+
+  // Public communities join directly on click — no invite code shown or
+  // needed, since Discover only ever lists public listings in the first
+  // place. Routing this through the code-entry modal would visibly expose
+  // the raw invite code in a text field for no reason.
+  const handleJoin = async (server: ServerListing) => {
+    if (!user || !server.inviteCode || joiningId) return
+    setJoiningId(server.id)
+    try {
+      const joined = await joinServer(user.uid, server.inviteCode)
+      setActiveServer(joined.id)
+      setViewMode('server')
+      toast.success(`Joined "${joined.name}"!`)
+    } catch (err: unknown) {
+      toast.error((err as Error).message ?? 'Failed to join community')
+    } finally {
+      setJoiningId(null)
+    }
+  }
 
   useEffect(() => {
     Promise.all([getFeaturedServers(), getTrendingServers()])
@@ -160,7 +192,7 @@ export function DiscoverPage({ onJoinServer }: DiscoverPageProps) {
               <span className="text-sm font-semibold text-pulse-text-normal">Featured</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onJoin={() => onJoinServer(s.inviteCode)} />)}
+              {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onJoin={handleJoin} joining={joiningId === s.id} />)}
             </div>
           </div>
         )}
@@ -185,7 +217,7 @@ export function DiscoverPage({ onJoinServer }: DiscoverPageProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {servers.map(s => <ServerCard key={s.id} server={s} onJoin={() => onJoinServer(s.inviteCode)} />)}
+              {servers.map(s => <ServerCard key={s.id} server={s} onJoin={handleJoin} joining={joiningId === s.id} />)}
             </div>
           )}
         </div>
