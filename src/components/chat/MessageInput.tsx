@@ -1,13 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { Plus, Smile, Send, X, Mic, Mic2, BarChart2, Calendar, Sparkles, Loader } from 'lucide-react'
+import { Plus, Smile, Send, X, BarChart2, Calendar, Sparkles, Loader } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import EmojiPicker from 'emoji-picker-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/utils/helpers'
 import { uploadMessageAttachment, validateAttachmentFile } from '@/services/storage.service'
 import { useAuth } from '@/hooks/useAuth'
-import { VoiceRecorder } from '@/components/voice/VoiceRecorder'
-import { useSpeechToText } from '@/hooks/useSpeechToText'
 import type { ServerMember, User, Attachment } from '@/types'
 import toast from 'react-hot-toast'
 import { getSmartReplies } from '@/services/ai.service'
@@ -60,7 +58,6 @@ export function MessageInput({
   const [content, setContent] = useState('')
   const [sending, setSending] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
-  const [showVoice, setShowVoice] = useState(false)
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const [showMentions, setShowMentions] = useState(false)
@@ -142,41 +139,6 @@ export function MessageInput({
     }
   }
 
-  const appendTranscript = useCallback((transcript: string) => {
-    const trimmed = transcript.trim()
-    if (!trimmed) return
-    setContent(prev => (prev && !prev.endsWith(' ') ? `${prev} ${trimmed} ` : `${prev}${trimmed} `))
-
-    clearTimeout(typingRef.current)
-    onTypingStart()
-    typingRef.current = setTimeout(onTypingStop, 3000)
-
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 240) + 'px'
-        textareaRef.current.focus()
-      }
-    })
-  }, [onTypingStart, onTypingStop])
-
-  const {
-    isSupported: speechSupported,
-    isListening,
-    interimTranscript,
-    startListening,
-    stopListening,
-  } = useSpeechToText({
-    onFinalResult: appendTranscript,
-    onError: (error) => {
-      if (error === 'not-allowed' || error === 'service-not-allowed') {
-        toast.error('Microphone access denied')
-      } else if (error !== 'no-speech' && error !== 'aborted') {
-        toast.error('Voice typing failed')
-      }
-    },
-  })
-
   const insertMention = (memberId: string) => {
     const u = users[memberId]
     if (!u) return
@@ -236,7 +198,6 @@ export function MessageInput({
 
   const handleSend = async () => {
     if ((!content.trim() && pendingFiles.length === 0) || sending || disabled) return
-    if (isListening) stopListening()
     setSending(true)
     try {
       const attachments: Attachment[] = []
@@ -317,39 +278,6 @@ export function MessageInput({
             <button onClick={() => setSmartReplies([])} className="p-0.5 text-pulse-text-muted hover:text-white ml-auto">
               <X size={12} />
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Voice recorder */}
-      <AnimatePresence>
-        {showVoice && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="mb-2">
-            <VoiceRecorder
-              channelId={channelId}
-              serverId={serverId}
-              dmChannelId={null}
-              onSent={() => setShowVoice(false)}
-              onCancel={() => setShowVoice(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Voice-to-type listening indicator */}
-      <AnimatePresence>
-        {isListening && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            className="flex items-center gap-2 px-3 pb-2 text-xs text-pulse-text-muted"
-          >
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-            </span>
-            <span className="truncate">Listening{interimTranscript ? `: ${interimTranscript}` : '…'}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -438,35 +366,13 @@ export function MessageInput({
             <Smile size={20} />
           </button>
 
-          {speechSupported && (
-            <button
-              onClick={() => (isListening ? stopListening() : startListening())}
-              title={isListening ? 'Stop voice typing' : 'Voice to type'}
-              className={cn(
-                'p-1 rounded-full transition-colors',
-                isListening ? 'text-red-400' : 'text-pulse-text-muted hover:text-pulse-text-normal'
-              )}
-            >
-              <Mic2 size={20} className={isListening ? 'animate-pulse' : ''} />
-            </button>
-          )}
-
-          {content.trim() || pendingFiles.length > 0 ? (
-            <button
-              onClick={handleSend}
-              disabled={sending}
-              className="p-1.5 rounded-full bg-pulse-brand text-white hover:bg-pulse-brand-hover disabled:opacity-50"
-            >
-              <Send size={16} />
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowVoice(v => !v)}
-              className={cn('p-1 rounded-full transition-colors', showVoice ? 'text-red-400' : 'text-pulse-text-muted hover:text-pulse-text-normal')}
-            >
-              <Mic size={20} />
-            </button>
-          )}
+          <button
+            onClick={handleSend}
+            disabled={sending || (!content.trim() && pendingFiles.length === 0)}
+            className="p-1.5 rounded-full bg-pulse-brand text-white hover:bg-pulse-brand-hover disabled:opacity-50"
+          >
+            <Send size={16} />
+          </button>
         </div>
       </div>
 

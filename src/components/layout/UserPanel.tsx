@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Mic, MicOff, Headphones, VolumeX, Settings, Smile } from 'lucide-react'
+import { Headphones, VolumeX, Settings, Smile } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils/helpers'
 import { useAuth } from '@/hooks/useAuth'
@@ -28,7 +28,6 @@ const STATUS_COLORS: Record<string, string> = {
 export function UserPanel() {
   const { user } = useAuth()
   const { setSettingsOpen, setUserProfileId } = useAppStore()
-  const [isMuted, setIsMuted] = useState(false)
   const [isDeafened, setIsDeafened] = useState(false)
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showCustomStatus, setShowCustomStatus] = useState(false)
@@ -109,18 +108,6 @@ export function UserPanel() {
 
       {/* Action buttons */}
       <div className="flex items-center gap-0.5 shrink-0">
-        <Tooltip content={isMuted ? 'Unmute' : 'Mute'} side="top">
-          <button
-            onClick={() => setIsMuted(v => !v)}
-            className={cn(
-              'p-1.5 rounded transition-colors',
-              isMuted ? 'text-pulse-text-danger' : 'text-pulse-text-muted hover:text-pulse-text-normal hover:bg-white/10'
-            )}
-          >
-            {isMuted ? <MicOff size={17} /> : <Mic size={17} />}
-          </button>
-        </Tooltip>
-
         <Tooltip content={isDeafened ? 'Undeafen' : 'Deafen'} side="top">
           <button
             onClick={() => setIsDeafened(v => !v)}
