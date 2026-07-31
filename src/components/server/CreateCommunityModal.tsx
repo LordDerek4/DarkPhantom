@@ -283,15 +283,16 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
         }).catch(() => {}) // listing might not exist yet — ignore
       }
 
-      // Update server description + banner in server doc
-      if (form.description || bannerUrl) {
-        const { updateDoc: updateFirestoreDoc } = await import('firebase/firestore')
-        await updateFirestoreDoc(doc(db, 'servers', server.id), {
-          ...(form.description && { description: form.description }),
-          ...(bannerUrl && { bannerUrl }),
-          updatedAt: serverTimestamp(),
-        })
-      }
+      // Update server description, banner, and accent colour in the server doc —
+      // the sidebar/header rendering reads Server.accentColor directly, not
+      // communitySettings.accentColor, so this write is what actually makes
+      // the chosen colour show up.
+      await updateDoc(doc(db, 'servers', server.id), {
+        accentColor: form.accentColor,
+        ...(form.description && { description: form.description }),
+        ...(bannerUrl && { bannerUrl }),
+        updatedAt: serverTimestamp(),
+      })
 
       // Get invite code from the listing
       const listingSnap = await import('firebase/firestore').then(({ getDoc }) =>
@@ -996,15 +997,24 @@ function RulesStep({
 // ─── Step: Done ──────────────────────────────────────────────────────────────
 
 function DoneStep({ name, inviteCode, onClose }: { name: string; inviteCode: string; onClose: () => void }) {
-  const [copied, setCopied] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const inviteUrl = inviteCode ? `${window.location.origin}/invite/${inviteCode}` : ''
 
-  const copy = () => {
+  const copyCode = () => {
+    if (!inviteCode) return
+    navigator.clipboard.writeText(inviteCode).then(() => {
+      setCodeCopied(true)
+      setTimeout(() => setCodeCopied(false), 2000)
+    })
+  }
+
+  const copyLink = () => {
     if (!inviteUrl) return
     navigator.clipboard.writeText(inviteUrl).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2000)
     })
   }
 
@@ -1026,26 +1036,41 @@ function DoneStep({ name, inviteCode, onClose }: { name: string; inviteCode: str
         </p>
       </motion.div>
 
-      {inviteUrl && (
+      {inviteCode && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
           className="mt-6 p-4 bg-pulse-bg-primary border border-white/10 rounded-xl"
         >
-          <p className="text-xs text-pulse-text-muted mb-2 font-semibold uppercase tracking-wide">Invite Link</p>
+          <p className="text-xs text-pulse-text-muted mb-2 font-semibold uppercase tracking-wide">Invite Code</p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-sm text-pulse-text-normal bg-pulse-bg-elevated px-3 py-2 rounded-lg truncate text-left">
+            <code className="flex-1 text-2xl font-bold tracking-[0.3em] text-pulse-text-normal bg-pulse-bg-elevated px-3 py-2.5 rounded-lg text-center">
+              {inviteCode}
+            </code>
+            <button
+              onClick={copyCode}
+              className={cn(
+                'shrink-0 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                codeCopied ? 'bg-green-500/20 text-green-400' : 'bg-pulse-brand/20 text-pulse-brand hover:bg-pulse-brand/30'
+              )}
+            >
+              {codeCopied ? <Check size={15} /> : <Link size={15} />}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 mt-2">
+            <code className="flex-1 text-xs text-pulse-text-muted bg-pulse-bg-elevated/50 px-3 py-1.5 rounded-lg truncate text-left">
               {inviteUrl}
             </code>
             <button
-              onClick={copy}
+              onClick={copyLink}
               className={cn(
-                'shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                copied ? 'bg-green-500/20 text-green-400' : 'bg-pulse-brand/20 text-pulse-brand hover:bg-pulse-brand/30'
+                'shrink-0 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                linkCopied ? 'bg-green-500/20 text-green-400' : 'bg-white/5 text-pulse-text-muted hover:bg-white/10'
               )}
             >
-              {copied ? <Check size={15} /> : <Link size={15} />}
+              {linkCopied ? <Check size={12} /> : 'Copy link'}
             </button>
           </div>
         </motion.div>

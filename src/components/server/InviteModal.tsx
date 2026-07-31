@@ -41,11 +41,10 @@ export function InviteModal({ open, onClose, serverId, channelId }: InviteModalP
   }
 
   const handleCopy = (invite: Invite) => {
-    const url = `${window.location.origin}/invite/${invite.code}`
-    navigator.clipboard.writeText(url)
+    navigator.clipboard.writeText(invite.code)
     setCopiedId(invite.id)
     setTimeout(() => setCopiedId(null), 2000)
-    toast.success('Invite link copied!')
+    toast.success('Invite code copied!')
   }
 
   const handleDelete = async (inviteId: string) => {
@@ -71,7 +70,10 @@ export function InviteModal({ open, onClose, serverId, channelId }: InviteModalP
                 className="flex items-center gap-3 p-3 rounded-lg bg-pulse-bg-elevated"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-mono text-pulse-text-normal truncate">
+                  <p className="text-lg font-bold tracking-[0.2em] text-pulse-text-normal">
+                    {invite.code}
+                  </p>
+                  <p className="text-xs text-pulse-text-muted truncate">
                     {window.location.origin}/invite/{invite.code}
                   </p>
                   <div className="flex items-center gap-3 mt-1 text-xs text-pulse-text-muted">
