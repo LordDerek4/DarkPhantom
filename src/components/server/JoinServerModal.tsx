@@ -40,7 +40,7 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
       onClose()
       setInviteCode('')
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? 'Invalid or expired invite link')
+      toast.error((err as Error).message ?? 'Invalid or expired invite code')
     } finally {
       setLoading(false)
     }
@@ -50,13 +50,13 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
     <Modal open={open} onClose={onClose} title="Join a Server" size="sm">
       <form onSubmit={handleJoin} className="space-y-4">
         <p className="text-pulse-text-muted text-sm">
-          Enter a 6-digit invite code, or paste an invite link.
+          Enter a 6-digit invite code to join a server.
         </p>
 
-        {/* Code / link input */}
+        {/* Code input */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-pulse-text-muted">
-            Invite Code or Link
+            Invite Code
           </label>
           <div className="relative">
             <Link2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-pulse-text-muted pointer-events-none" />
@@ -64,26 +64,19 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
               autoFocus
               value={inviteCode}
               onChange={e => setInviteCode(e.target.value)}
-              placeholder="123456 or https://…/invite/123456"
+              placeholder="123456"
               className="w-full bg-pulse-bg-primary border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-pulse-text-normal placeholder:text-pulse-text-muted focus:border-pulse-brand/50 focus:outline-none transition-colors font-mono"
             />
           </div>
         </div>
 
-        {/* Examples */}
+        {/* Example */}
         <div className="rounded-xl bg-pulse-bg-primary border border-white/5 divide-y divide-white/5">
           <div className="flex items-center gap-2.5 px-3 py-2.5">
             <Link2 size={13} className="text-pulse-text-muted shrink-0" />
             <div>
               <p className="text-xs font-medium text-pulse-text-muted">6-digit code</p>
               <p className="text-xs font-mono text-pulse-text-normal mt-0.5 tracking-widest">123456</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5">
-            <Link2 size={13} className="text-pulse-text-muted shrink-0" />
-            <div>
-              <p className="text-xs font-medium text-pulse-text-muted">Full invite link</p>
-              <p className="text-xs font-mono text-pulse-text-normal mt-0.5 truncate">…/invite/123456</p>
             </div>
           </div>
         </div>
