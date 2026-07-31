@@ -10,6 +10,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   increment,
   writeBatch,
@@ -19,6 +20,20 @@ import { db, COLLECTIONS } from './firebase'
 import type { Server, ServerMember, Role, Invite } from '@/types'
 import { generateId, generateInviteCode } from '@/utils/helpers'
 import { DEFAULT_PERMISSIONS, ADMIN_PERMISSIONS, OWNER_PERMISSIONS } from '@/utils/permissions'
+
+// 6-digit numeric codes are a much smaller keyspace (1M) than the old
+// 8-character alphanumeric ones (62^8), so unlike before, collisions are
+// realistic — check for an existing invite with the same code (active or
+// not) and retry, so joinServer()'s `where('code', '==', ...)` lookup can
+// never resolve to the wrong server.
+async function generateUniqueInviteCode(): Promise<string> {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const code = generateInviteCode()
+    const existing = await getDocs(query(collection(db, COLLECTIONS.INVITES), where('code', '==', code), limit(1)))
+    if (existing.empty) return code
+  }
+  throw new Error('Could not generate a unique invite code — please try again')
+}
 
 export async function createServer(
   ownerId: string,
@@ -121,7 +136,7 @@ export async function createServer(
   await batch2.commit()
 
   // ── Default invite + server listing ───────────────────────────────────────
-  const inviteCode = generateInviteCode()
+  const inviteCode = await generateUniqueInviteCode()
   await addDoc(collection(db, COLLECTIONS.INVITES), {
     serverId,
     channelId: generalChannelId,
@@ -159,14 +174,52 @@ export async function createServer(
   return { id: serverId, ...serverData }
 }
 
+// Safety net against brute-forcing the 6-digit invite code keyspace (1M
+// combinations — much smaller than the old 8-char alphanumeric one).
+// Client-enforced, so not bulletproof against a determined attacker
+// scripting around it, but raises the bar significantly for casual abuse.
+const JOIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
+const JOIN_RATE_LIMIT_MAX_ATTEMPTS = 8
+
+async function checkJoinRateLimit(userId: string): Promise<void> {
+  const snap = await getDoc(doc(db, 'joinAttempts', userId))
+  if (!snap.exists()) return
+  const data = snap.data()
+  const windowStartMs = (data.windowStart as Timestamp | undefined)?.toMillis() ?? 0
+  const elapsed = Date.now() - windowStartMs
+  if (elapsed < JOIN_RATE_LIMIT_WINDOW_MS && (data.failedCount ?? 0) >= JOIN_RATE_LIMIT_MAX_ATTEMPTS) {
+    const retryInMin = Math.ceil((JOIN_RATE_LIMIT_WINDOW_MS - elapsed) / 60000)
+    throw new Error(`Too many invalid invite codes. Try again in ${retryInMin} minute${retryInMin === 1 ? '' : 's'}.`)
+  }
+}
+
+async function recordFailedJoinAttempt(userId: string): Promise<void> {
+  const ref = doc(db, 'joinAttempts', userId)
+  const snap = await getDoc(ref)
+  if (snap.exists()) {
+    const data = snap.data()
+    const windowStartMs = (data.windowStart as Timestamp | undefined)?.toMillis() ?? 0
+    if (Date.now() - windowStartMs < JOIN_RATE_LIMIT_WINDOW_MS) {
+      await updateDoc(ref, { failedCount: increment(1) })
+      return
+    }
+  }
+  await setDoc(ref, { failedCount: 1, windowStart: serverTimestamp() })
+}
+
 export async function joinServer(userId: string, inviteCode: string): Promise<Server> {
+  await checkJoinRateLimit(userId)
+
   // Lookup invite
   const inviteQuery = query(
     collection(db, COLLECTIONS.INVITES),
     where('code', '==', inviteCode)
   )
   const inviteSnap = await getDocs(inviteQuery)
-  if (inviteSnap.empty) throw new Error('Invalid invite code')
+  if (inviteSnap.empty) {
+    await recordFailedJoinAttempt(userId)
+    throw new Error('Invalid invite code')
+  }
 
   const inviteDoc = inviteSnap.docs[0]
   const invite = { id: inviteDoc.id, ...inviteDoc.data() } as Invite
@@ -394,7 +447,7 @@ export async function createInvite(
   createdBy: string,
   options: { expiresInHours?: number; maxUses?: number; isTemporary?: boolean } = {}
 ): Promise<Invite> {
-  const code = generateInviteCode()
+  const code = await generateUniqueInviteCode()
   const inviteId = generateId()
   const expiresAt = options.expiresInHours
     ? Timestamp.fromDate(new Date(Date.now() + options.expiresInHours * 3600 * 1000))

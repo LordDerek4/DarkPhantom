@@ -28,8 +28,7 @@ export function formatFullDateTime(timestamp: Timestamp): string {
 }
 
 export function generateInviteCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
 export function generateId(): string {

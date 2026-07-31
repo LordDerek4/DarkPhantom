@@ -17,7 +17,7 @@ const FAQS = [
     section: 'Servers & Communities',
     items: [
       { q: 'How many servers can I join?', a: 'There\'s no hard limit on how many servers you can join.' },
-      { q: 'How do I invite someone to my server?', a: 'Right-click your server icon in the sidebar and choose "Invite People", or look for the invite code shown at the bottom of the channel list. Share the 8-character code or the full link.' },
+      { q: 'How do I invite someone to my server?', a: 'Right-click your server icon in the sidebar and choose "Invite People". Share the 6-digit code or the full link.' },
       { q: 'Can I make my server private?', a: 'Yes. When creating a community, choose "Private" and it won\'t appear in the public Discover page. Only people with your invite code can join.' },
       { q: 'How do I delete a server?', a: 'Open Server Settings (right-click the server icon → Server Settings), go to "Delete Server", type the server name to confirm, and click Delete. This is permanent.' },
       { q: 'Can I transfer ownership of a server?', a: 'Yes. Go to Server Settings → Members, find the member you want to transfer ownership to, click the menu icon, and confirm the transfer.' },

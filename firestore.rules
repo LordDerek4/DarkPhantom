@@ -203,6 +203,10 @@ service cloud.firestore {
       );
     }
 
+    match /joinAttempts/{userId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+
     // ─── Notifications ────────────────────────────────────────────────────────
 
     match /notifications/{notificationId} {

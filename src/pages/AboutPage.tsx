@@ -19,7 +19,7 @@ export function AboutPage() {
           'Discover public communities across gaming, music, tech, science, and more',
           'Send direct messages and create group conversations',
           'Share files, images, and links in real time',
-          'Invite friends with unique 8-character invite codes',
+          'Invite friends with a unique 6-digit invite code',
           'Set your status, customise your profile, and build your presence',
         ]} />
       </Section>

@@ -23,7 +23,7 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
   }, [open, initialCode])
 
   const extractCode = (input: string): string => {
-    const match = input.match(/(?:invite\/|^)([A-Za-z0-9]{8})(?:[^A-Za-z0-9].*)?$/)
+    const match = input.match(/(?:invite\/|^)(\d{6})(?:[^\d].*)?$/)
     return match ? match[1] : input.trim()
   }
 
@@ -50,13 +50,13 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
     <Modal open={open} onClose={onClose} title="Join a Server" size="sm">
       <form onSubmit={handleJoin} className="space-y-4">
         <p className="text-pulse-text-muted text-sm">
-          Paste an invite link to join a server.
+          Enter a 6-digit invite code, or paste an invite link.
         </p>
 
-        {/* Link input */}
+        {/* Code / link input */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-pulse-text-muted">
-            Invite Link
+            Invite Code or Link
           </label>
           <div className="relative">
             <Link2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-pulse-text-muted pointer-events-none" />
@@ -64,19 +64,26 @@ export function JoinServerModal({ open, onClose, initialCode }: JoinServerModalP
               autoFocus
               value={inviteCode}
               onChange={e => setInviteCode(e.target.value)}
-              placeholder="https://…/invite/ABCD1234"
+              placeholder="123456 or https://…/invite/123456"
               className="w-full bg-pulse-bg-primary border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-pulse-text-normal placeholder:text-pulse-text-muted focus:border-pulse-brand/50 focus:outline-none transition-colors font-mono"
             />
           </div>
         </div>
 
-        {/* Example */}
+        {/* Examples */}
         <div className="rounded-xl bg-pulse-bg-primary border border-white/5 divide-y divide-white/5">
           <div className="flex items-center gap-2.5 px-3 py-2.5">
             <Link2 size={13} className="text-pulse-text-muted shrink-0" />
             <div>
+              <p className="text-xs font-medium text-pulse-text-muted">6-digit code</p>
+              <p className="text-xs font-mono text-pulse-text-normal mt-0.5 tracking-widest">123456</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 px-3 py-2.5">
+            <Link2 size={13} className="text-pulse-text-muted shrink-0" />
+            <div>
               <p className="text-xs font-medium text-pulse-text-muted">Full invite link</p>
-              <p className="text-xs font-mono text-pulse-text-normal mt-0.5 truncate">…/invite/ABCD1234</p>
+              <p className="text-xs font-mono text-pulse-text-normal mt-0.5 truncate">…/invite/123456</p>
             </div>
           </div>
         </div>
