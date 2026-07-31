@@ -262,6 +262,7 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     setLoading(true)
     try {
       const server = await create(form.name.trim(), form.iconFile ?? undefined, form.privacy === 'public')
+      const category = TEMPLATE_TO_CATEGORY[form.template] ?? 'social'
 
       // Upload banner if provided
       let bannerUrl: string | null = null
@@ -269,12 +270,16 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
         bannerUrl = await uploadServerBanner(server.id, form.bannerFile)
       }
 
-      // Write extended community settings
+      // Write extended community settings. category is stored here regardless
+      // of privacy — a private server never gets a serverListings doc (see
+      // createServer()), so this is the only durable record of which category
+      // it belongs to if the owner later makes it public.
       await setDoc(doc(db, 'communitySettings', server.id), {
         serverId: server.id,
         description: form.description,
         accentColor: form.accentColor,
         privacy: form.privacy,
+        category,
         ageRestricted: form.ageRestricted,
         features: form.features,
         bannerUrl,
@@ -292,7 +297,6 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
 
       // Update serverListings with the real category, description, and banner
       if (form.privacy === 'public') {
-        const category = TEMPLATE_TO_CATEGORY[form.template] ?? 'social'
         await updateDoc(doc(db, 'serverListings', server.id), {
           category,
           description: form.description || '',

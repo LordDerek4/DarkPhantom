@@ -7,7 +7,8 @@ import { useAppStore } from '@/store/useAppStore'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUserCache'
 import { updateServer, deleteServer, leaveServer, transferOwnership } from '@/services/server.service'
-import { uploadServerIcon, validateImageFile } from '@/services/storage.service'
+import { syncDiscoverListing } from '@/services/discover.service'
+import { uploadServerIcon, uploadServerBanner, validateImageFile } from '@/services/storage.service'
 import { InviteModal } from '@/components/server/InviteModal'
 import { Avatar } from '@/components/ui/Avatar'
 import toast from 'react-hot-toast'
@@ -36,6 +37,8 @@ export function ServerSettingsModal() {
   const [saving, setSaving] = useState(false)
   const [iconPreview, setIconPreview] = useState<string | null>(null)
   const [iconFile, setIconFile] = useState<File | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [showInvite, setShowInvite] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
@@ -50,6 +53,8 @@ export function ServerSettingsModal() {
       setIsPublic(server.isPublic)
       setIconPreview(server.iconUrl)
       setIconFile(null)
+      setBannerPreview(server.bannerUrl)
+      setBannerFile(null)
       setDeleteConfirm('')
       setTab('overview')
       setTransferTarget(null)
@@ -88,21 +93,60 @@ export function ServerSettingsModal() {
     maxSize: 8 * 1024 * 1024,
   })
 
+  const onBannerDrop = useCallback((files: File[]) => {
+    const file = files[0]
+    if (!file) return
+    const err = validateImageFile(file)
+    if (err) { toast.error(err); return }
+    setBannerFile(file)
+    setBannerPreview(URL.createObjectURL(file))
+  }, [])
+
+  const { getRootProps: getBannerRootProps, getInputProps: getBannerInputProps, isDragActive: isBannerDragActive } = useDropzone({
+    onDrop: onBannerDrop,
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
+    maxFiles: 1,
+    maxSize: 8 * 1024 * 1024,
+  })
+
   const handleSave = async () => {
     if (!server || !isOwner) return
     setSaving(true)
     try {
       let iconUrl = server.iconUrl
       if (iconFile) iconUrl = await uploadServerIcon(server.id, iconFile)
+      let bannerUrl = server.bannerUrl
+      if (bannerFile) bannerUrl = await uploadServerBanner(server.id, bannerFile)
+
+      const finalName = name.trim() || server.name
+      const finalDescription = description.trim()
+
       await updateServer(server.id, {
-        name: name.trim() || server.name,
-        description: description.trim(),
+        name: finalName,
+        description: finalDescription,
         iconUrl,
+        bannerUrl,
         accentColor,
         isPublic,
       })
+
+      // Keep the Discover listing in sync whenever privacy changes — a
+      // private server has no listing to begin with, so going public needs
+      // one created, and going private needs it removed.
+      if (isPublic !== server.isPublic) {
+        await syncDiscoverListing(server.id, isPublic, {
+          name: finalName,
+          description: finalDescription,
+          iconUrl,
+          bannerUrl,
+          memberCount: server.memberCount,
+          boostLevel: server.boostLevel,
+        })
+      }
+
       toast.success('Server updated!')
       setIconFile(null)
+      setBannerFile(null)
     } catch (err) {
       console.error('[ServerSettings] Save failed:', err)
       toast.error('Failed to save changes')
@@ -174,6 +218,7 @@ export function ServerSettingsModal() {
     name !== server.name ||
     description !== (server.description ?? '') ||
     !!iconFile ||
+    !!bannerFile ||
     accentColor !== (server.accentColor ?? null) ||
     isPublic !== server.isPublic
   )
@@ -271,6 +316,29 @@ export function ServerSettingsModal() {
           {tab === 'overview' && (
             <div className="space-y-6 max-w-md">
               <h2 className="text-lg font-bold text-white">Server Overview</h2>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wide text-pulse-text-muted mb-1.5">
+                  Server Banner
+                </label>
+                <div
+                  {...getBannerRootProps()}
+                  className={cn(
+                    'relative h-28 rounded-xl overflow-hidden cursor-pointer group border-2 border-dashed transition-colors',
+                    isBannerDragActive ? 'border-pulse-brand' : 'border-white/15 hover:border-white/30'
+                  )}
+                  style={{ background: bannerPreview ? undefined : 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(235,69,158,0.1))' }}
+                >
+                  <input {...getBannerInputProps()} />
+                  {bannerPreview && <img src={bannerPreview} alt="" className="w-full h-full object-cover" />}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
+                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-2 text-white text-sm font-medium transition-opacity">
+                      <Camera size={16} /> {bannerPreview ? 'Change Banner' : 'Upload Banner'}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-pulse-text-muted mt-1.5">PNG, JPG, WEBP — max 8MB. Recommended: 960×270px</p>
+              </div>
 
               <div className="flex items-center gap-5">
                 <div

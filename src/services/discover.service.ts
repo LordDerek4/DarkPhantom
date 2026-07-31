@@ -1,6 +1,6 @@
 import {
   collection, query, where, orderBy, limit,
-  getDocs, doc, setDoc, updateDoc, serverTimestamp,
+  getDocs, getDoc, doc, setDoc, updateDoc, deleteDoc, serverTimestamp,
 } from 'firebase/firestore'
 import { db, COLLECTIONS } from './firebase'
 import type { ServerListing } from '@/types/extended'
@@ -45,6 +45,60 @@ export async function publishServerListing(
 
 export async function updateServerListing(serverId: string, updates: Partial<ServerListing>): Promise<void> {
   await updateDoc(doc(db, LISTINGS, serverId), { ...updates, updatedAt: serverTimestamp() })
+}
+
+// Keeps the Discover listing in sync when a server's privacy is toggled.
+// A server created private never gets a listing at all (see createServer()),
+// so flipping it public later has nothing to update — this creates one from
+// scratch. Flipping to private removes the listing so it actually disappears
+// from Discover (the read side doesn't otherwise filter by isPublic once a
+// listing exists).
+export async function syncDiscoverListing(
+  serverId: string,
+  isPublic: boolean,
+  data: {
+    name: string
+    description: string
+    iconUrl: string | null
+    bannerUrl: string | null
+    memberCount: number
+    boostLevel: number
+  }
+): Promise<void> {
+  if (!isPublic) {
+    await deleteDoc(doc(db, LISTINGS, serverId)).catch(() => {})
+    return
+  }
+
+  // Category is set at creation time (communitySettings.category) regardless
+  // of privacy, so it survives even though a private server never got a
+  // listing to store it in.
+  const settingsSnap = await getDoc(doc(db, 'communitySettings', serverId))
+  const category = (settingsSnap.exists() && (settingsSnap.data().category as string)) || 'social'
+
+  const invitesSnap = await getDocs(
+    query(collection(db, COLLECTIONS.INVITES), where('serverId', '==', serverId), limit(1))
+  )
+  const inviteCode = (invitesSnap.docs[0]?.data().code as string | undefined) ?? ''
+
+  await publishServerListing(serverId, {
+    serverId,
+    name: data.name,
+    description: data.description,
+    iconUrl: data.iconUrl,
+    bannerUrl: data.bannerUrl,
+    memberCount: data.memberCount,
+    onlineCount: 0,
+    weeklyGrowth: 0,
+    engagementScore: 0,
+    boostLevel: data.boostLevel,
+    category,
+    tags: [],
+    language: 'en',
+    inviteCode,
+    isFeatured: false,
+    isVerified: false,
+  })
 }
 
 export async function getFeaturedServers(count = 12): Promise<ServerListing[]> {
