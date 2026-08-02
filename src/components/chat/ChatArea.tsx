@@ -131,6 +131,8 @@ export function ChatArea() {
       <div className="px-4 pb-4 pt-2 shrink-0">
         <MessageInput
           channelName={activeChannel.name}
+          channelId={activeChannelId ?? ''}
+          serverId={activeServerId}
           disabled={!canSend}
           onSend={send}
           onTypingStart={startTyping}

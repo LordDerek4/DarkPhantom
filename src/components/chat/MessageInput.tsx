@@ -71,10 +71,10 @@ export function MessageInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSmartReply = async () => {
-    if (!channelId || loadingReplies || !user?.isPremium) return
+    if (!channelId || !serverId || loadingReplies || !user?.isPremium) return
     setLoadingReplies(true)
     try {
-      const replies = await getSmartReplies(channelId)
+      const replies = await getSmartReplies(channelId, serverId)
       setSmartReplies(replies)
     } catch {
       toast.error('Could not generate suggestions')

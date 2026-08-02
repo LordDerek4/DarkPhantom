@@ -72,12 +72,12 @@ export function AIAssistant({ channelId, serverId, onClose }: AIAssistantProps) 
     setLoading(true)
 
     try {
-      const response = await runAICommand(activeCommand, inputCopy, channelId, serverId, user.uid)
+      const response = await runAICommand(activeCommand, inputCopy, channelId, serverId)
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(), role: 'assistant', content: response, timestamp: new Date(),
       }])
     } catch (err) {
-      toast.error('AI unavailable — add VITE_ANTHROPIC_API_KEY to .env')
+      toast.error('AI unavailable right now')
       setMessages(prev => prev.filter(m => m.id !== userMsg.id))
     } finally {
       setLoading(false)
