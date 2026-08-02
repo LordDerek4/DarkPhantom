@@ -136,19 +136,19 @@ export function ServerSettingsModal() {
         isPublic,
       })
 
-      // Keep the Discover listing in sync whenever privacy changes — a
-      // private server has no listing to begin with, so going public needs
-      // one created, and going private needs it removed.
-      if (isPublic !== server.isPublic) {
-        await syncDiscoverListing(server.id, isPublic, {
-          name: finalName,
-          description: finalDescription,
-          iconUrl,
-          bannerUrl,
-          memberCount: server.memberCount,
-          boostLevel: server.boostLevel,
-        })
-      }
+      // Keep the Discover listing in sync on every save, not just privacy
+      // changes — otherwise editing the name/icon/banner of an already-public
+      // server never reaches the separate serverListings doc Discover and
+      // Browse Communities actually read from. syncDiscoverListing already
+      // handles create-on-public / delete-on-private internally.
+      await syncDiscoverListing(server.id, isPublic, {
+        name: finalName,
+        description: finalDescription,
+        iconUrl,
+        bannerUrl,
+        memberCount: server.memberCount,
+        boostLevel: server.boostLevel,
+      })
 
       toast.success('Server updated!')
       setIconFile(null)
