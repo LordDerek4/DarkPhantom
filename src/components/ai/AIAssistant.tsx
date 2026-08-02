@@ -101,7 +101,6 @@ export function AIAssistant({ channelId, serverId, onClose }: AIAssistantProps) 
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-pulse-text-normal">AI Assistant</p>
-          <p className="text-xs text-pulse-text-muted">Powered by Claude</p>
         </div>
         <button onClick={onClose} className="text-pulse-text-muted hover:text-pulse-text-normal">
           <X size={16} />

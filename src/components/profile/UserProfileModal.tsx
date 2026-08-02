@@ -13,7 +13,9 @@ import {
 } from '@/services/friends.service'
 import { subscribeToPresence } from '@/services/presence.service'
 import { useDMChannels } from '@/hooks/useDirectMessages'
-import type { User, UserStatus } from '@/types'
+import { db, COLLECTIONS } from '@/services/firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import type { User, UserStatus, Server } from '@/types'
 import type { Friendship } from '@/types/extended'
 import toast from 'react-hot-toast'
 
@@ -91,11 +93,28 @@ export function UserProfileModal() {
 
   const friendStatus = getFriendshipStatus(friendship, currentUser?.uid ?? '')
 
-  // Mutual servers: servers both users are in
-  const myServerIds = new Set(Object.keys(servers))
-  // We can't easily query the other user's servers client-side without a server lookup,
-  // so we approximate with shared server memberships from the store
-  const sharedServers = Object.values(servers).filter(s => myServerIds.has(s.id)).slice(0, 4)
+  // Servers both users are actually in. For your own profile that's just your
+  // server list; for anyone else we have to check membership per-server —
+  // there's no query that returns "this other user's servers" directly under
+  // the security rules (a member can only read serverMembers docs for servers
+  // they're themselves in), so we check each of *our* servers individually.
+  const [sharedServers, setSharedServers] = useState<Server[]>([])
+  useEffect(() => {
+    if (!userProfileId) { setSharedServers([]); return }
+    if (isOwnProfile) { setSharedServers(Object.values(servers).slice(0, 4)); return }
+
+    let cancelled = false
+    const myServers = Object.values(servers).slice(0, 25)
+    Promise.all(
+      myServers.map(async s => {
+        const snap = await getDoc(doc(db, COLLECTIONS.SERVER_MEMBERS, `${s.id}_${userProfileId}`)).catch(() => null)
+        return snap?.exists() && !snap.data().isBanned ? s : null
+      })
+    ).then(results => {
+      if (!cancelled) setSharedServers(results.filter((s): s is Server => s !== null).slice(0, 4))
+    })
+    return () => { cancelled = true }
+  }, [userProfileId, isOwnProfile, servers])
 
   const handleMessage = async () => {
     if (!currentUser || !userProfileId) return

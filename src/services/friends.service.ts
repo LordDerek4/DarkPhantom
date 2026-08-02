@@ -50,24 +50,29 @@ export async function sendFriendRequestByUsername(
 }
 
 export async function respondToFriendRequest(friendshipId: string, accept: boolean): Promise<void> {
+  // The same pending request can be shown (and actioned) from the Friends
+  // panel, a profile modal, and the notification bell at the same time —
+  // accepting/declining from one doesn't remove it from the others. Bail out
+  // if it's already been responded to, so a stale click elsewhere can't
+  // re-fire (and re-notify) on an already-resolved request.
+  const snap = await getDoc(doc(db, FRIENDSHIPS, friendshipId))
+  if (!snap.exists() || snap.data().status !== 'pending') return
+
   if (accept) {
-    const snap = await getDoc(doc(db, FRIENDSHIPS, friendshipId))
     await updateDoc(doc(db, FRIENDSHIPS, friendshipId), {
       status: 'accepted',
       updatedAt: serverTimestamp(),
     })
     // Notify the original requester that their request was accepted
-    if (snap.exists()) {
-      const data = snap.data()
-      const accepter = await getUserById(data.receiverId).catch(() => null)
-      await createNotification(
-        data.requesterId,
-        'friend_request',
-        'Friend Request Accepted',
-        `${accepter?.displayName ?? 'Someone'} accepted your friend request`,
-        { fromUserId: data.receiverId, iconUrl: accepter?.avatarUrl ?? undefined },
-      ).catch(() => {})
-    }
+    const data = snap.data()
+    const accepter = await getUserById(data.receiverId).catch(() => null)
+    await createNotification(
+      data.requesterId,
+      'friend_request',
+      'Friend Request Accepted',
+      `${accepter?.displayName ?? 'Someone'} accepted your friend request`,
+      { fromUserId: data.receiverId, iconUrl: accepter?.avatarUrl ?? undefined },
+    ).catch(() => {})
   } else {
     await deleteDoc(doc(db, FRIENDSHIPS, friendshipId))
   }
