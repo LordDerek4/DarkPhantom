@@ -54,8 +54,8 @@ export function CommunityPreviewModal({ server, onClose, onJoin, joining }: Comm
           </button>
         </div>
 
-        <div className="p-5 pt-0 overflow-y-auto scrollbar-thin">
-          <div className="relative z-10 flex items-end gap-3 mb-3 -mt-8">
+        <div className="relative z-10 p-5 pt-0 -mt-8 overflow-y-auto scrollbar-thin">
+          <div className="flex items-end gap-3 mb-3">
             {server.iconUrl ? (
               <img src={server.iconUrl} alt="" className="w-16 h-16 rounded-2xl border-4 border-pulse-bg-secondary object-cover shrink-0 bg-pulse-bg-secondary" />
             ) : (
