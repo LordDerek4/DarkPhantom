@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
+  onSnapshot,
   type DocumentSnapshot,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
@@ -99,6 +100,18 @@ export async function getPinnedMessages(channelId: string): Promise<Message[]> {
   )
   const snap = await getDocs(q)
   return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Message)
+}
+
+export function subscribeToPinnedMessages(channelId: string, callback: (messages: Message[]) => void): () => void {
+  const q = query(
+    collection(db, COLLECTIONS.MESSAGES),
+    where('channelId', '==', channelId),
+    where('isPinned', '==', true),
+    orderBy('createdAt', 'desc')
+  )
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Message))
+  })
 }
 
 export async function getMessages(

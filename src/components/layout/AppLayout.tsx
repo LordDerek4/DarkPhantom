@@ -11,6 +11,7 @@ import { usePresenceSubscription } from '@/hooks/usePresence'
 import { useAuth } from '@/hooks/useAuth'
 import { AIAssistant } from '@/components/ai/AIAssistant'
 import { ThreadPanel } from '@/components/threads/ThreadPanel'
+import { PinnedMessagesPanel } from '@/components/pinned/PinnedMessagesPanel'
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard'
 import { EventsPanel } from '@/components/events/EventsPanel'
 
@@ -124,6 +125,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                 key="threads"
                 channelId={activeChannelId}
                 serverId={activeServerId}
+                onClose={closePanel}
+              />
+            )}
+            {openPanel === 'pinned' && activeChannelId && (
+              <PinnedMessagesPanel
+                key="pinned"
+                channelId={activeChannelId}
                 onClose={closePanel}
               />
             )}

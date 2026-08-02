@@ -11,6 +11,7 @@ interface MessageListProps {
   onDelete: (messageId: string) => Promise<void>
   onReact: (messageId: string, emoji: string, emojiName: string) => Promise<void>
   onPin: (messageId: string) => Promise<void>
+  onUnpin: (messageId: string) => Promise<void>
   onReply: (message: Message) => void
   members: ServerMember[]
   roles: Role[]
@@ -24,6 +25,7 @@ export function MessageList({
   onDelete,
   onReact,
   onPin,
+  onUnpin,
   onReply,
   members,
   roles,
@@ -97,6 +99,7 @@ export function MessageList({
               onDelete={onDelete}
               onReact={onReact}
               onPin={onPin}
+              onUnpin={onUnpin}
               onReply={onReply}
               members={members}
               roles={roles}

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Edit2, Trash2, Pin, Reply, MoreHorizontal, Check, X, SmilePlus, Crown } from 'lucide-react'
+import { Edit2, Trash2, Pin, PinOff, Reply, MoreHorizontal, Check, X, SmilePlus, Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn, formatMessageTime, formatFullDateTime } from '@/utils/helpers'
 import { Avatar } from '@/components/ui/Avatar'
@@ -17,6 +17,7 @@ interface MessageItemProps {
   onDelete: (messageId: string) => Promise<void>
   onReact: (messageId: string, emoji: string, emojiName: string) => Promise<void>
   onPin: (messageId: string) => Promise<void>
+  onUnpin: (messageId: string) => Promise<void>
   onReply: (message: Message) => void
   members: ServerMember[]
   roles: Role[]
@@ -30,6 +31,7 @@ export function MessageItem({
   onDelete,
   onReact,
   onPin,
+  onUnpin,
   onReply,
   members,
   roles,
@@ -264,12 +266,12 @@ export function MessageItem({
               </button>
             </Tooltip>
           )}
-          <Tooltip content="Pin Message" side="top">
+          <Tooltip content={message.isPinned ? 'Unpin Message' : 'Pin Message'} side="top">
             <button
-              onClick={() => onPin(message.id)}
+              onClick={() => (message.isPinned ? onUnpin(message.id) : onPin(message.id))}
               className="p-1.5 rounded hover:bg-white/10 text-pulse-text-muted hover:text-pulse-text-normal"
             >
-              <Pin size={16} />
+              {message.isPinned ? <PinOff size={16} /> : <Pin size={16} />}
             </button>
           </Tooltip>
           {isOwn && (

@@ -126,7 +126,12 @@ export function TopBar() {
 
       <div className="ml-auto flex items-center gap-1">
         <NotificationBellButton />
-        <TopBarButton icon={<Pin size={20} />} tooltip="Pinned Messages" onClick={() => useAppStore.getState().togglePanel('threads')} />
+        <TopBarButton
+          icon={<Pin size={20} />}
+          tooltip="Pinned Messages"
+          onClick={() => useAppStore.getState().togglePanel('pinned')}
+          active={useAppStore.getState().openPanel === 'pinned'}
+        />
         <TopBarButton
           icon={<MessageSquare size={20} />}
           tooltip="Threads"

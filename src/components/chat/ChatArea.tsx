@@ -112,6 +112,7 @@ export function ChatArea() {
             onDelete={remove}
             onReact={react}
             onPin={pin}
+            onUnpin={unpin}
             onReply={() => {}}
             currentUserId={user?.uid ?? ''}
             members={members}

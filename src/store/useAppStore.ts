@@ -49,7 +49,7 @@ interface AppState {
   serverSettingsId: string | null
   userProfileId: string | null
   rightPanelWidth: number
-  openPanel: 'threads' | 'ai' | 'analytics' | 'events' | null
+  openPanel: 'threads' | 'ai' | 'analytics' | 'events' | 'pinned' | null
   isCreateCommunityOpen: boolean
   isJoinServerOpen: boolean
   isMobileSidebarOpen: boolean
@@ -127,7 +127,7 @@ interface AppActions {
   setSettingsOpen: (open: boolean, tab?: string) => void
   setServerSettingsId: (id: string | null) => void
   setUserProfileId: (id: string | null) => void
-  togglePanel: (panel: 'threads' | 'ai' | 'analytics' | 'events') => void
+  togglePanel: (panel: 'threads' | 'ai' | 'analytics' | 'events' | 'pinned') => void
   closePanel: () => void
   openCreateCommunity: () => void
   closeCreateCommunity: () => void
