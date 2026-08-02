@@ -7,10 +7,11 @@ import { joinServer } from '@/services/server.service'
 import { startCommunityCheckout } from '@/services/monetization.service'
 import { useAuth } from '@/hooks/useAuth'
 import { useAppStore } from '@/store/useAppStore'
+import { CommunityPreviewModal } from './CommunityPreviewModal'
 import type { ServerListing } from '@/types/extended'
 import toast from 'react-hot-toast'
 
-function ServerCard({ server, onJoin, joining }: { server: ServerListing; onJoin: (server: ServerListing) => void; joining: boolean }) {
+function ServerCard({ server, onPreview, joining }: { server: ServerListing; onPreview: (server: ServerListing) => void; joining: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -19,7 +20,7 @@ function ServerCard({ server, onJoin, joining }: { server: ServerListing; onJoin
         'group bg-pulse-bg-secondary rounded-xl overflow-hidden hover:ring-1 hover:ring-pulse-brand/30 transition-all cursor-pointer relative',
         joining && 'opacity-60 pointer-events-none'
       )}
-      onClick={() => onJoin(server)}
+      onClick={() => onPreview(server)}
     >
       {joining && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30">
@@ -92,11 +93,10 @@ export function DiscoverPage() {
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
   const [joiningId, setJoiningId] = useState<string | null>(null)
+  const [previewServer, setPreviewServer] = useState<ServerListing | null>(null)
 
-  // Public communities join directly on click — no invite code shown or
-  // needed, since Discover only ever lists public listings in the first
-  // place. Routing this through the code-entry modal would visibly expose
-  // the raw invite code in a text field for no reason.
+  // Clicking a card opens a preview (banner, description, rules) rather than
+  // joining immediately — the actual join happens from inside the preview.
   const handleJoin = async (server: ServerListing) => {
     if (!user || joiningId) return
 
@@ -119,6 +119,7 @@ export function DiscoverPage() {
       const joined = await joinServer(user.uid, server.inviteCode)
       setActiveServer(joined.id)
       setViewMode('server')
+      setPreviewServer(null)
       toast.success(`Joined "${joined.name}"!`)
     } catch (err: unknown) {
       toast.error((err as Error).message ?? 'Failed to join community')
@@ -215,7 +216,7 @@ export function DiscoverPage() {
               <span className="text-sm font-semibold text-pulse-text-normal">Featured</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onJoin={handleJoin} joining={joiningId === s.id} />)}
+              {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
             </div>
           </div>
         )}
@@ -240,11 +241,18 @@ export function DiscoverPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {servers.map(s => <ServerCard key={s.id} server={s} onJoin={handleJoin} joining={joiningId === s.id} />)}
+              {servers.map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
             </div>
           )}
         </div>
       </div>
+
+      <CommunityPreviewModal
+        server={previewServer}
+        onClose={() => setPreviewServer(null)}
+        onJoin={handleJoin}
+        joining={!!previewServer && joiningId === previewServer.id}
+      />
     </div>
   )
 }

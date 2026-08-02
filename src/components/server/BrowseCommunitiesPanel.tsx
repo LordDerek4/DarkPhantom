@@ -5,6 +5,7 @@ import { getFeaturedServers, getTrendingServers } from '@/services/discover.serv
 import { joinServer } from '@/services/server.service'
 import { startCommunityCheckout } from '@/services/monetization.service'
 import { cn, formatPrice } from '@/utils/helpers'
+import { CommunityPreviewModal } from '@/components/discover/CommunityPreviewModal'
 import type { ServerListing } from '@/types/extended'
 import toast from 'react-hot-toast'
 
@@ -14,6 +15,7 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [joiningId, setJoiningId] = useState<string | null>(null)
+  const [previewServer, setPreviewServer] = useState<ServerListing | null>(null)
 
   useEffect(() => {
     Promise.all([getFeaturedServers(6), getTrendingServers(12)])
@@ -55,6 +57,7 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
     try {
       const joined = await joinServer(user.uid, server.inviteCode)
       toast.success(`Joined ${joined.name}!`)
+      setPreviewServer(null)
       onJoined(joined.id)
     } catch (err: unknown) {
       toast.error((err as Error).message ?? 'Failed to join community')
@@ -97,7 +100,8 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
             return (
               <div
                 key={server.id}
-                className="bg-pulse-bg-primary rounded-xl overflow-hidden border border-white/5 hover:border-white/10 transition-all group"
+                onClick={() => setPreviewServer(server)}
+                className="bg-pulse-bg-primary rounded-xl overflow-hidden border border-white/5 hover:border-white/10 transition-all group cursor-pointer"
               >
                 {/* Banner */}
                 <div className="h-16 relative">
@@ -133,7 +137,7 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
                       <Users size={10} />{server.memberCount.toLocaleString()} members
                     </span>
                     <button
-                      onClick={() => handleJoin(server)}
+                      onClick={e => { e.stopPropagation(); setPreviewServer(server) }}
                       disabled={isJoining}
                       className={cn(
                         'flex items-center gap-1 px-3 py-1.5 disabled:opacity-50 text-xs font-semibold rounded-lg transition-colors',
@@ -155,6 +159,13 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
           })}
         </div>
       )}
+
+      <CommunityPreviewModal
+        server={previewServer}
+        onClose={() => setPreviewServer(null)}
+        onJoin={handleJoin}
+        joining={!!previewServer && joiningId === previewServer.id}
+      />
     </div>
   )
 }
