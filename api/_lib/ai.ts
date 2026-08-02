@@ -1,26 +1,32 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
-let client: Anthropic | null = null
+// Best-known cost/speed-tier model as of this integration — OpenAI's lineup
+// moves fast, so double check this is still current and swap if needed.
+const MODEL = 'gpt-4o-mini'
 
-function getClient(): Anthropic {
+let client: OpenAI | null = null
+
+function getClient(): OpenAI {
   if (!client) {
-    const key = process.env.ANTHROPIC_API_KEY
-    if (!key) throw new Error('ANTHROPIC_API_KEY not set')
-    client = new Anthropic({ apiKey: key })
+    const key = process.env.OPENAI_API_KEY
+    if (!key) throw new Error('OPENAI_API_KEY not set')
+    client = new OpenAI({ apiKey: key })
   }
   return client
 }
 
-export async function callClaude(systemPrompt: string, userMessage: string): Promise<{ text: string; tokens: number }> {
+export async function callAI(systemPrompt: string, userMessage: string): Promise<{ text: string; tokens: number }> {
   const ai = getClient()
-  const response = await ai.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+  const response = await ai.chat.completions.create({
+    model: MODEL,
     max_tokens: 1024,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userMessage }],
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
   })
-  const text = response.content[0].type === 'text' ? response.content[0].text : ''
-  const tokens = response.usage.input_tokens + response.usage.output_tokens
+  const text = response.choices[0]?.message?.content ?? ''
+  const tokens = (response.usage?.prompt_tokens ?? 0) + (response.usage?.completion_tokens ?? 0)
   return { text, tokens }
 }
 

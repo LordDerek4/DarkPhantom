@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getDb, verifyIdToken } from './_lib/firebase-admin.js'
-import { callClaude, buildCommandPrompt } from './_lib/ai.js'
+import { callAI, buildCommandPrompt } from './_lib/ai.js'
 
 const MAX_CONTEXT_MESSAGES = 20
 
@@ -35,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const context = msgSnap.docs.map(d => `[${d.data().authorId}]: ${d.data().content}`).reverse()
 
     const { systemPrompt, userMessage } = buildCommandPrompt(command, input ?? '', context)
-    const { text, tokens } = await callClaude(systemPrompt, userMessage)
+    const { text, tokens } = await callAI(systemPrompt, userMessage)
 
     await db.collection('aiInteractions').add({
       serverId,

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getDb, verifyIdToken } from './_lib/firebase-admin.js'
-import { callClaude, SMART_REPLY_SYSTEM_PROMPT } from './_lib/ai.js'
+import { callAI, SMART_REPLY_SYSTEM_PROMPT } from './_lib/ai.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -29,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const context = msgSnap.docs.map(d => `[${d.data().authorId}]: ${d.data().content}`).reverse()
     if (context.length === 0) return res.json({ replies: [] })
 
-    const { text } = await callClaude(SMART_REPLY_SYSTEM_PROMPT, `Recent messages:\n${context.join('\n')}`)
+    const { text } = await callAI(SMART_REPLY_SYSTEM_PROMPT, `Recent messages:\n${context.join('\n')}`)
 
     let replies: string[]
     try {

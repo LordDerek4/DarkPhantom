@@ -10,7 +10,6 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.104.1",
     "@marsidev/react-turnstile": "^1.5.3",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-context-menu": "^2.2.1",
@@ -30,6 +29,7 @@
     "firebase-admin": "^14.0.0",
     "framer-motion": "^11.2.12",
     "lucide-react": "^0.395.0",
+    "openai": "^7.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.3",
