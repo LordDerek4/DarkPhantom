@@ -150,14 +150,14 @@ export function UserSettings() {
 
   const { getRootProps: getAvatarRootProps, getInputProps: getAvatarInputProps, isDragActive: isAvatarDrag } = useDropzone({
     onDrop: onAvatarDrop,
-    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/gif': [] },
     maxFiles: 1,
     maxSize: 8 * 1024 * 1024,
   })
 
   const { getRootProps: getBannerRootProps, getInputProps: getBannerInputProps, isDragActive: isBannerDrag } = useDropzone({
     onDrop: onBannerDrop,
-    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/gif': [] },
     maxFiles: 1,
     maxSize: 8 * 1024 * 1024,
   })

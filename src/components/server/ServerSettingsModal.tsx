@@ -94,7 +94,7 @@ export function ServerSettingsModal() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: onIconDrop,
-    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/gif': [] },
     maxFiles: 1,
     maxSize: 8 * 1024 * 1024,
   })
@@ -110,7 +110,7 @@ export function ServerSettingsModal() {
 
   const { getRootProps: getBannerRootProps, getInputProps: getBannerInputProps, isDragActive: isBannerDragActive } = useDropzone({
     onDrop: onBannerDrop,
-    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/gif': [] },
     maxFiles: 1,
     maxSize: 8 * 1024 * 1024,
   })
