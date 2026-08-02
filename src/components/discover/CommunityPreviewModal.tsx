@@ -40,7 +40,7 @@ export function CommunityPreviewModal({ server, onClose, onJoin, joining }: Comm
         onClick={e => e.stopPropagation()}
       >
         {/* Banner */}
-        <div className="h-36 relative shrink-0">
+        <div className="h-56 relative shrink-0 z-0">
           {server.bannerUrl ? (
             <img src={server.bannerUrl} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -54,10 +54,10 @@ export function CommunityPreviewModal({ server, onClose, onJoin, joining }: Comm
           </button>
         </div>
 
-        <div className="p-5 pt-0 -mt-8 overflow-y-auto scrollbar-thin">
-          <div className="flex items-end gap-3 mb-3">
+        <div className="p-5 pt-0 overflow-y-auto scrollbar-thin">
+          <div className="relative z-10 flex items-end gap-3 mb-3 -mt-8">
             {server.iconUrl ? (
-              <img src={server.iconUrl} alt="" className="w-16 h-16 rounded-2xl border-4 border-pulse-bg-secondary object-cover shrink-0" />
+              <img src={server.iconUrl} alt="" className="w-16 h-16 rounded-2xl border-4 border-pulse-bg-secondary object-cover shrink-0 bg-pulse-bg-secondary" />
             ) : (
               <div className="w-16 h-16 rounded-2xl bg-pulse-brand border-4 border-pulse-bg-secondary flex items-center justify-center text-white font-bold text-xl shrink-0">
                 {server.name[0]}
