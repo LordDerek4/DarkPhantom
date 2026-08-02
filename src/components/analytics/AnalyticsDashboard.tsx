@@ -96,18 +96,24 @@ export function AnalyticsDashboard({ serverId }: AnalyticsDashboardProps) {
 
   const load = async () => {
     setLoading(true)
-    const [hist, h] = await Promise.all([
-      getServerAnalyticsHistory(serverId),
-      computeCommunityHealth(serverId),
-    ])
-    setAnalytics(hist)
-    setHealth(h)
+    try {
+      await computeServerAnalytics(serverId)
+      const h = await computeCommunityHealth(serverId)
+      setHealth(h)
+    } catch {
+      // Falls back to whatever's already stored (e.g. a Firestore index still
+      // building) rather than leaving the panel stuck on a spinner forever.
+    }
+    try {
+      setAnalytics(await getServerAnalyticsHistory(serverId))
+    } catch {
+      // ignore — keep prior state
+    }
     setLoading(false)
   }
 
   const refresh = async () => {
     setRefreshing(true)
-    await computeServerAnalytics(serverId)
     await load()
     setRefreshing(false)
   }

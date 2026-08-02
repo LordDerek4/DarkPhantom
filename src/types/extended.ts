@@ -232,6 +232,7 @@ export interface ServerAnalytics {
   dau: number
   mau: number
   newMembers: number
+  activeUserIds: string[]
   totalMessages: number
   activeChannels: string[]
   topContributors: { userId: string; messageCount: number }[]
