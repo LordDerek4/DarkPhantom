@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { X, Users, Lock, ShieldCheck, Loader } from 'lucide-react'
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/services/firebase'
 import { cn, formatPrice } from '@/utils/helpers'
+import { getCachedCommunityRules, getCommunityRules } from '@/services/discover.service'
 import type { ServerListing } from '@/types/extended'
 
 interface CommunityPreviewModalProps {
@@ -13,18 +12,26 @@ interface CommunityPreviewModalProps {
 }
 
 export function CommunityPreviewModal({ server, onClose, onJoin, joining }: CommunityPreviewModalProps) {
-  const [rules, setRules] = useState<string[]>([])
-  const [loadingRules, setLoadingRules] = useState(false)
+  // Discover/Browse prefetch rules for every visible card as soon as they
+  // load, so this is almost always already cached by the time someone
+  // clicks — read it synchronously on first render instead of always
+  // starting from a loading state.
+  const [rules, setRules] = useState<string[]>(() => (server ? getCachedCommunityRules(server.id) ?? [] : []))
+  const [loadingRules, setLoadingRules] = useState(() => !!server && getCachedCommunityRules(server.id) === undefined)
 
   useEffect(() => {
-    if (!server) { setRules([]); return }
+    if (!server) { setRules([]); setLoadingRules(false); return }
+
+    const cached = getCachedCommunityRules(server.id)
+    if (cached !== undefined) {
+      setRules(cached)
+      setLoadingRules(false)
+      return
+    }
+
     setLoadingRules(true)
-    getDoc(doc(db, 'communityRules', server.id))
-      .then(snap => {
-        const list = (snap.data()?.rules as { id: string; text: string }[] | undefined) ?? []
-        setRules(list.map(r => r.text))
-      })
-      .catch(() => setRules([]))
+    getCommunityRules(server.id)
+      .then(setRules)
       .finally(() => setLoadingRules(false))
   }, [server?.id])
 

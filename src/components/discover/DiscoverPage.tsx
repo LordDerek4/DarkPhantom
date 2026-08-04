@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Search, Compass, TrendingUp, Star, Users, ArrowRight, Loader, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn, formatPrice } from '@/utils/helpers'
-import { getFeaturedServers, getTrendingServers, searchServers, SERVER_CATEGORIES } from '@/services/discover.service'
+import { getFeaturedServers, getTrendingServers, searchServers, SERVER_CATEGORIES, prefetchCommunityRules } from '@/services/discover.service'
 import { joinServer } from '@/services/server.service'
 import { startCommunityCheckout } from '@/services/monetization.service'
 import { useAuth } from '@/hooks/useAuth'
@@ -137,6 +137,12 @@ export function DiscoverPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  // Warm the rules cache for every visible card so the preview modal opens
+  // instantly instead of showing a spinner.
+  useEffect(() => {
+    for (const s of [...featured, ...servers]) prefetchCommunityRules(s.id)
+  }, [featured, servers])
 
   const handleSearch = useCallback(async (q: string, cat: string | null) => {
     setSearching(true)

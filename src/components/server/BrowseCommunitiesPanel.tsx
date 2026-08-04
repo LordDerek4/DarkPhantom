@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Compass, Users, ArrowRight, Lock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { getFeaturedServers, getTrendingServers } from '@/services/discover.service'
+import { getFeaturedServers, getTrendingServers, prefetchCommunityRules } from '@/services/discover.service'
 import { joinServer } from '@/services/server.service'
 import { startCommunityCheckout } from '@/services/monetization.service'
 import { cn, formatPrice } from '@/utils/helpers'
@@ -30,6 +30,12 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  // Warm the rules cache for every visible card so the preview modal opens
+  // instantly instead of showing a spinner.
+  useEffect(() => {
+    for (const s of servers) prefetchCommunityRules(s.id)
+  }, [servers])
 
   const filtered = query.trim()
     ? servers.filter(s => s.name.toLowerCase().includes(query.toLowerCase()) || s.description?.toLowerCase().includes(query.toLowerCase()))

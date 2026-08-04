@@ -7,6 +7,40 @@ import type { ServerListing } from '@/types/extended'
 
 const LISTINGS = 'serverListings'
 
+// Community rules, cached in memory so the preview modal can show them
+// instantly instead of showing a spinner every time it opens. Discover/Browse
+// call prefetchCommunityRules() for every card as soon as the list loads, so
+// by the time someone actually clicks one, the fetch has usually long since
+// finished.
+const rulesCache = new Map<string, string[]>()
+const rulesInFlight = new Map<string, Promise<string[]>>()
+
+async function fetchCommunityRules(serverId: string): Promise<string[]> {
+  const snap = await getDoc(doc(db, 'communityRules', serverId))
+  const list = (snap.data()?.rules as { id: string; text: string }[] | undefined) ?? []
+  return list.map(r => r.text)
+}
+
+export function prefetchCommunityRules(serverId: string): void {
+  if (rulesCache.has(serverId) || rulesInFlight.has(serverId)) return
+  const promise = fetchCommunityRules(serverId).catch(() => [])
+  rulesInFlight.set(serverId, promise)
+  promise.then(rules => {
+    rulesCache.set(serverId, rules)
+    rulesInFlight.delete(serverId)
+  })
+}
+
+export function getCachedCommunityRules(serverId: string): string[] | undefined {
+  return rulesCache.get(serverId)
+}
+
+export async function getCommunityRules(serverId: string): Promise<string[]> {
+  if (rulesCache.has(serverId)) return rulesCache.get(serverId)!
+  prefetchCommunityRules(serverId)
+  return rulesInFlight.get(serverId)!
+}
+
 function serverToListing(data: Record<string, unknown>, id: string): ServerListing {
   return {
     id,
