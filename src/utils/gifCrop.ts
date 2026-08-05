@@ -37,6 +37,16 @@ export async function cropAnimatedGif(file: File, crop: PixelCropRect): Promise<
   const cropCtx = cropCanvas.getContext('2d')
   if (!cropCtx) throw new Error('Canvas not supported')
 
+  // Scratch canvas for each frame's raw patch, so it can be composited onto
+  // the persistent canvas via drawImage (alpha-blended) instead of
+  // putImageData (a raw overwrite). Most real GIFs only redraw a small delta
+  // region per frame using transparency to let the previous frame show
+  // through everywhere else — putImageData ignores alpha and blanks that
+  // region out instead, which is what was causing the corrupted/glitchy output.
+  const patchCanvas = document.createElement('canvas')
+  const patchCtx = patchCanvas.getContext('2d')
+  if (!patchCtx) throw new Error('Canvas not supported')
+
   const gif = new GIF({
     workers: 2,
     quality: 10,
@@ -53,12 +63,13 @@ export async function cropAnimatedGif(file: File, crop: PixelCropRect): Promise<
     const needsRestore = frame.disposalType === 3
     if (needsRestore) previousSnapshot = compositeCtx.getImageData(0, 0, fullWidth, fullHeight)
 
-    const patchImageData = new ImageData(
-      new Uint8ClampedArray(frame.patch),
-      frame.dims.width,
-      frame.dims.height
+    patchCanvas.width = frame.dims.width
+    patchCanvas.height = frame.dims.height
+    patchCtx.putImageData(
+      new ImageData(new Uint8ClampedArray(frame.patch), frame.dims.width, frame.dims.height),
+      0, 0
     )
-    compositeCtx.putImageData(patchImageData, frame.dims.left, frame.dims.top)
+    compositeCtx.drawImage(patchCanvas, frame.dims.left, frame.dims.top)
 
     cropCtx.clearRect(0, 0, outWidth, outHeight)
     cropCtx.drawImage(

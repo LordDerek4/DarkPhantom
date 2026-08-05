@@ -114,6 +114,7 @@ export function CreateServerModal({ open, onClose }: CreateServerModalProps) {
         file={cropTarget}
         aspect={1}
         circular
+        maxOutputSize={{ width: 512, height: 512 }}
         onCancel={() => setCropTarget(null)}
         onCropped={cropped => {
           setCropTarget(null)

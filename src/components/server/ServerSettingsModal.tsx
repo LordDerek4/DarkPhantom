@@ -684,6 +684,7 @@ export function ServerSettingsModal() {
         <ImageCropModal
           file={cropTarget.file}
           aspect={cropTarget.kind === 'icon' ? 1 : undefined}
+          maxOutputSize={cropTarget.kind === 'icon' ? { width: 512, height: 512 } : { width: 1200, height: 400 }}
           onCancel={() => setCropTarget(null)}
           onCropped={cropped => {
             const kind = cropTarget.kind

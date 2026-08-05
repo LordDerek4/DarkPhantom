@@ -9,16 +9,25 @@ interface ImageCropModalProps {
   /** Locks the crop box to this ratio while still letting it be resized (proportionally). Omit to allow fully free resizing — used for banners. */
   aspect?: number
   circular?: boolean
+  /** Caps the crop box so the exported image can't exceed this natural pixel size — keeps output reasonable and avoids feeding gif.js huge frames. */
+  maxOutputSize?: { width: number; height: number }
   onCancel: () => void
   onCropped: (file: File) => void
 }
 
-function initialCrop(mediaWidth: number, mediaHeight: number, aspect?: number): Crop {
+function initialCrop(
+  mediaWidth: number,
+  mediaHeight: number,
+  aspect?: number,
+  maxCropPx?: { width: number; height: number }
+): Crop {
   // No locked aspect (banners) still gets a sensible wide starting box —
   // it's just freely resizable afterward instead of staying that shape.
   const startAspect = aspect ?? 3
+  const startWidthPx = maxCropPx ? Math.min(mediaWidth * 0.9, maxCropPx.width) : mediaWidth * 0.9
+  const startWidthPct = (startWidthPx / mediaWidth) * 100
   return centerCrop(
-    makeAspectCrop({ unit: '%', width: 90 }, startAspect, mediaWidth, mediaHeight),
+    makeAspectCrop({ unit: '%', width: startWidthPct }, startAspect, mediaWidth, mediaHeight),
     mediaWidth,
     mediaHeight
   )
@@ -52,16 +61,21 @@ async function cropToFile(image: HTMLImageElement, crop: PixelCrop, sourceFile: 
   return new File([blob], `${base}-cropped.${ext}`, { type: outputType })
 }
 
-export function ImageCropModal({ file, aspect, circular = false, onCancel, onCropped }: ImageCropModalProps) {
+export function ImageCropModal({ file, aspect, circular = false, maxOutputSize, onCancel, onCropped }: ImageCropModalProps) {
   const [imageSrc] = useState(() => URL.createObjectURL(file))
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const [saving, setSaving] = useState(false)
+  const [maxCropPx, setMaxCropPx] = useState<{ width: number; height: number } | undefined>()
   const imgRef = useRef<HTMLImageElement>(null)
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height } = e.currentTarget
-    setCrop(initialCrop(width, height, aspect))
+    const { width, height, naturalWidth, naturalHeight } = e.currentTarget
+    const max = maxOutputSize
+      ? { width: (maxOutputSize.width / naturalWidth) * width, height: (maxOutputSize.height / naturalHeight) * height }
+      : undefined
+    setMaxCropPx(max)
+    setCrop(initialCrop(width, height, aspect, max))
   }
 
   const handleCancel = () => {
@@ -113,6 +127,8 @@ export function ImageCropModal({ file, aspect, circular = false, onCancel, onCro
             circularCrop={circular}
             minWidth={40}
             minHeight={40}
+            maxWidth={maxCropPx?.width}
+            maxHeight={maxCropPx?.height}
           >
             {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <img ref={imgRef} src={imageSrc} onLoad={onImageLoad} style={{ maxHeight: '55vh' }} />

@@ -1102,6 +1102,7 @@ export function UserSettings() {
           file={cropTarget.file}
           aspect={cropTarget.kind === 'avatar' ? 1 : undefined}
           circular={cropTarget.kind === 'avatar'}
+          maxOutputSize={cropTarget.kind === 'avatar' ? { width: 512, height: 512 } : { width: 1200, height: 400 }}
           onCancel={() => setCropTarget(null)}
           onCropped={cropped => {
             const kind = cropTarget.kind
