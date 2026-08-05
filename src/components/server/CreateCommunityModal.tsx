@@ -16,6 +16,7 @@ import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/services/firebase'
 import { useAuth } from '@/hooks/useAuth'
 import { BrowseCommunitiesPanel } from '@/components/server/BrowseCommunitiesPanel'
+import { ImageCropModal } from '@/components/ui/ImageCropModal'
 import toast from 'react-hot-toast'
 
 // ─── Template definitions ─────────────────────────────────────────────────────
@@ -179,12 +180,16 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
 
   const update = (patch: Partial<CommunityForm>) => setForm(f => ({ ...f, ...patch }))
 
+  const [cropTarget, setCropTarget] = useState<{ file: File; kind: 'icon' | 'banner' } | null>(null)
+
+  // GIFs skip cropping — rasterizing a single frame to canvas would kill the animation
   const onIconDrop = useCallback((files: File[]) => {
     const file = files[0]
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    update({ iconFile: file, iconPreview: URL.createObjectURL(file) })
+    if (file.type === 'image/gif') { update({ iconFile: file, iconPreview: URL.createObjectURL(file) }); return }
+    setCropTarget({ file, kind: 'icon' })
   }, [])
 
   const onBannerDrop = useCallback((files: File[]) => {
@@ -192,7 +197,8 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    update({ bannerFile: file, bannerPreview: URL.createObjectURL(file) })
+    if (file.type === 'image/gif') { update({ bannerFile: file, bannerPreview: URL.createObjectURL(file) }); return }
+    setCropTarget({ file, kind: 'banner' })
   }, [])
 
   const { getRootProps: getIconProps, getInputProps: getIconInput } = useDropzone({
@@ -496,6 +502,22 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
           )}
         </AnimatePresence>
       </motion.div>
+
+      {cropTarget && (
+        <ImageCropModal
+          file={cropTarget.file}
+          aspect={cropTarget.kind === 'icon' ? 1 : 3}
+          cropShape={cropTarget.kind === 'icon' ? 'round' : 'rect'}
+          onCancel={() => setCropTarget(null)}
+          onCropped={cropped => {
+            const kind = cropTarget.kind
+            setCropTarget(null)
+            const previewUrl = URL.createObjectURL(cropped)
+            if (kind === 'icon') update({ iconFile: cropped, iconPreview: previewUrl })
+            else update({ bannerFile: cropped, bannerPreview: previewUrl })
+          }}
+        />
+      )}
     </div>
   )
 }

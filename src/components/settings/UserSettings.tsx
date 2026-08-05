@@ -16,6 +16,7 @@ import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { validateImageFile } from '@/services/storage.service'
+import { ImageCropModal } from '@/components/ui/ImageCropModal'
 import { updateUserProfile, updateUserStatus } from '@/services/user.service'
 import { updatePresence } from '@/services/presence.service'
 import { startCheckout, openCustomerPortal } from '@/services/premium.service'
@@ -116,12 +117,9 @@ export function UserSettings() {
     }
   }, [user])
 
-  // Avatar upload
-  const onAvatarDrop = useCallback(async (files: File[]) => {
-    const file = files[0]
-    if (!file) return
-    const err = validateImageFile(file)
-    if (err) { toast.error(err); return }
+  const [cropTarget, setCropTarget] = useState<{ file: File; kind: 'avatar' | 'banner' } | null>(null)
+
+  const doAvatarUpload = useCallback(async (file: File) => {
     try {
       await uploadAndSetAvatar(file, setUploadProgress)
       toast.success('Avatar updated!')
@@ -132,12 +130,7 @@ export function UserSettings() {
     }
   }, [uploadAndSetAvatar])
 
-  // Banner upload
-  const onBannerDrop = useCallback(async (files: File[]) => {
-    const file = files[0]
-    if (!file) return
-    const err = validateImageFile(file)
-    if (err) { toast.error(err); return }
+  const doBannerUpload = useCallback(async (file: File) => {
     try {
       await uploadAndSetBanner(file, setUploadProgress)
       toast.success('Banner updated!')
@@ -147,6 +140,26 @@ export function UserSettings() {
       setUploadProgress(0)
     }
   }, [uploadAndSetBanner])
+
+  // Avatar upload — GIFs skip cropping since rasterizing a frame would kill the animation
+  const onAvatarDrop = useCallback((files: File[]) => {
+    const file = files[0]
+    if (!file) return
+    const err = validateImageFile(file)
+    if (err) { toast.error(err); return }
+    if (file.type === 'image/gif') { void doAvatarUpload(file); return }
+    setCropTarget({ file, kind: 'avatar' })
+  }, [doAvatarUpload])
+
+  // Banner upload
+  const onBannerDrop = useCallback((files: File[]) => {
+    const file = files[0]
+    if (!file) return
+    const err = validateImageFile(file)
+    if (err) { toast.error(err); return }
+    if (file.type === 'image/gif') { void doBannerUpload(file); return }
+    setCropTarget({ file, kind: 'banner' })
+  }, [doBannerUpload])
 
   const { getRootProps: getAvatarRootProps, getInputProps: getAvatarInputProps, isDragActive: isAvatarDrag } = useDropzone({
     onDrop: onAvatarDrop,
@@ -1039,6 +1052,21 @@ export function UserSettings() {
           </div>
         </div>
       </motion.div>
+
+      {cropTarget && (
+        <ImageCropModal
+          file={cropTarget.file}
+          aspect={cropTarget.kind === 'avatar' ? 1 : 3}
+          cropShape={cropTarget.kind === 'avatar' ? 'round' : 'rect'}
+          onCancel={() => setCropTarget(null)}
+          onCropped={cropped => {
+            const kind = cropTarget.kind
+            setCropTarget(null)
+            if (kind === 'avatar') void doAvatarUpload(cropped)
+            else void doBannerUpload(cropped)
+          }}
+        />
+      )}
     </div>
   )
 }

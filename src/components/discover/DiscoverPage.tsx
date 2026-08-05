@@ -28,12 +28,12 @@ function ServerCard({ server, onPreview, joining }: { server: ServerListing; onP
         </div>
       )}
       {server.bannerUrl ? (
-        <div className="h-20 relative">
+        <div className="h-24 relative">
           <img src={server.bannerUrl} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
         </div>
       ) : (
-        <div className="h-20 bg-gradient-to-br from-pulse-brand/30 to-red-500/30" />
+        <div className="h-24 bg-gradient-to-br from-pulse-brand/30 to-red-500/30" />
       )}
 
       <div className="p-3 pt-0 -mt-5 relative">
@@ -221,7 +221,7 @@ export function DiscoverPage() {
               <Star size={14} className="text-yellow-400" />
               <span className="text-sm font-semibold text-pulse-text-normal">Featured</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
             </div>
           </div>
@@ -246,7 +246,7 @@ export function DiscoverPage() {
               <p>No servers found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {servers.map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
             </div>
           )}

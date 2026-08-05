@@ -12,6 +12,7 @@ import { uploadServerIcon, uploadServerBanner, validateImageFile } from '@/servi
 import { InviteModal } from '@/components/server/InviteModal'
 import { MonetizationTab } from '@/components/server/MonetizationTab'
 import { Avatar } from '@/components/ui/Avatar'
+import { ImageCropModal } from '@/components/ui/ImageCropModal'
 import toast from 'react-hot-toast'
 
 type Tab = 'overview' | 'members' | 'monetization' | 'danger'
@@ -83,13 +84,16 @@ export function ServerSettingsModal() {
     }
   }, [serverSettingsId])
 
+  const [cropTarget, setCropTarget] = useState<{ file: File; kind: 'icon' | 'banner' } | null>(null)
+
+  // GIFs skip cropping — rasterizing a single frame to canvas would kill the animation
   const onIconDrop = useCallback((files: File[]) => {
     const file = files[0]
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    setIconFile(file)
-    setIconPreview(URL.createObjectURL(file))
+    if (file.type === 'image/gif') { setIconFile(file); setIconPreview(URL.createObjectURL(file)); return }
+    setCropTarget({ file, kind: 'icon' })
   }, [])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -104,8 +108,8 @@ export function ServerSettingsModal() {
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    setBannerFile(file)
-    setBannerPreview(URL.createObjectURL(file))
+    if (file.type === 'image/gif') { setBannerFile(file); setBannerPreview(URL.createObjectURL(file)); return }
+    setCropTarget({ file, kind: 'banner' })
   }, [])
 
   const { getRootProps: getBannerRootProps, getInputProps: getBannerInputProps, isDragActive: isBannerDragActive } = useDropzone({
@@ -646,6 +650,22 @@ export function ServerSettingsModal() {
           serverId={server.id}
           channelId={defaultChannelId}
           onClose={() => setShowInvite(false)}
+        />
+      )}
+
+      {cropTarget && (
+        <ImageCropModal
+          file={cropTarget.file}
+          aspect={cropTarget.kind === 'icon' ? 1 : 3}
+          cropShape={cropTarget.kind === 'icon' ? 'round' : 'rect'}
+          onCancel={() => setCropTarget(null)}
+          onCropped={cropped => {
+            const kind = cropTarget.kind
+            setCropTarget(null)
+            const previewUrl = URL.createObjectURL(cropped)
+            if (kind === 'icon') { setIconFile(cropped); setIconPreview(previewUrl) }
+            else { setBannerFile(cropped); setBannerPreview(previewUrl) }
+          }}
         />
       )}
     </div>

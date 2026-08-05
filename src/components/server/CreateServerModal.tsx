@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { validateImageFile } from '@/services/storage.service'
+import { ImageCropModal } from '@/components/ui/ImageCropModal'
 import toast from 'react-hot-toast'
 
 interface CreateServerModalProps {
@@ -22,13 +23,16 @@ export function CreateServerModal({ open, onClose }: CreateServerModalProps) {
   const [iconPreview, setIconPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const [cropTarget, setCropTarget] = useState<File | null>(null)
+
   const onDrop = useCallback((files: File[]) => {
     const file = files[0]
     if (!file) return
     const error = validateImageFile(file)
     if (error) { toast.error(error); return }
-    setIconFile(file)
-    setIconPreview(URL.createObjectURL(file))
+    // GIFs skip cropping — rasterizing a single frame to canvas would kill the animation
+    if (file.type === 'image/gif') { setIconFile(file); setIconPreview(URL.createObjectURL(file)); return }
+    setCropTarget(file)
   }, [])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -58,6 +62,7 @@ export function CreateServerModal({ open, onClose }: CreateServerModalProps) {
   }
 
   return (
+    <>
     <Modal open={open} onClose={onClose} title="Create Your Server" size="sm">
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Icon upload */}
@@ -105,5 +110,20 @@ export function CreateServerModal({ open, onClose }: CreateServerModalProps) {
         </div>
       </form>
     </Modal>
+
+    {cropTarget && (
+      <ImageCropModal
+        file={cropTarget}
+        aspect={1}
+        cropShape="round"
+        onCancel={() => setCropTarget(null)}
+        onCropped={cropped => {
+          setCropTarget(null)
+          setIconFile(cropped)
+          setIconPreview(URL.createObjectURL(cropped))
+        }}
+      />
+    )}
+    </>
   )
 }
