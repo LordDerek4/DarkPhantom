@@ -6,11 +6,15 @@ import { joinServer } from '@/services/server.service'
 import { startCommunityCheckout } from '@/services/monetization.service'
 import { cn, formatPrice } from '@/utils/helpers'
 import { CommunityPreviewModal } from '@/components/discover/CommunityPreviewModal'
+import { useAppStore } from '@/store/useAppStore'
 import type { ServerListing } from '@/types/extended'
 import toast from 'react-hot-toast'
 
 export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: string) => void }) {
   const { user } = useAuth()
+  const myServers = useAppStore(s => s.servers)
+  const setActiveServer = useAppStore(s => s.setActiveServer)
+  const setViewMode = useAppStore(s => s.setViewMode)
   const [servers, setServers] = useState<ServerListing[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -103,6 +107,7 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
         <div className="grid grid-cols-2 gap-3 max-h-[460px] overflow-y-auto scrollbar-thin pr-1">
           {filtered.map(server => {
             const isJoining = joiningId === server.id
+            const isMember = server.id in myServers
             return (
               <div
                 key={server.id}
@@ -143,15 +148,22 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
                       <Users size={10} />{server.memberCount.toLocaleString()} members
                     </span>
                     <button
-                      onClick={e => { e.stopPropagation(); setPreviewServer(server) }}
+                      onClick={e => {
+                        e.stopPropagation()
+                        if (isMember) { setActiveServer(server.id); setViewMode('server') }
+                        else setPreviewServer(server)
+                      }}
                       disabled={isJoining}
                       className={cn(
                         'flex items-center gap-1 px-3 py-1.5 disabled:opacity-50 text-xs font-semibold rounded-lg transition-colors',
+                        isMember ? 'bg-white/10 text-pulse-text-normal hover:bg-white/15' :
                         server.isPaid ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-pulse-brand hover:bg-pulse-brand-hover text-white'
                       )}
                     >
                       {isJoining ? (
                         <div className={cn('w-3 h-3 border border-t-white rounded-full animate-spin', server.isPaid ? 'border-yellow-400/30' : 'border-white/30')} />
+                      ) : isMember ? (
+                        <>Open <ArrowRight size={10} /></>
                       ) : server.isPaid && server.priceAmount != null ? (
                         <><Lock size={10} />{formatPrice(server.priceAmount, server.priceCurrency)}</>
                       ) : (

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { X, Users, Lock, ShieldCheck, Loader } from 'lucide-react'
+import { X, Users, Lock, ShieldCheck, Loader, ArrowRight } from 'lucide-react'
 import { cn, formatPrice } from '@/utils/helpers'
 import { getCachedCommunityRules, getCommunityRules } from '@/services/discover.service'
+import { useAppStore } from '@/store/useAppStore'
 import type { ServerListing } from '@/types/extended'
 
 interface CommunityPreviewModalProps {
@@ -12,6 +13,21 @@ interface CommunityPreviewModalProps {
 }
 
 export function CommunityPreviewModal({ server, onClose, onJoin, joining }: CommunityPreviewModalProps) {
+  // Discover/Browse list communities regardless of whether the current
+  // account already belongs to them (a member browsing, or an owner viewing
+  // their own public listing) — `servers` is the live set of servers the
+  // signed-in user is actually a member of, kept in sync by useServer.ts.
+  const myServers = useAppStore(s => s.servers)
+  const setActiveServer = useAppStore(s => s.setActiveServer)
+  const setViewMode = useAppStore(s => s.setViewMode)
+  const isMember = !!server && server.id in myServers
+
+  const handleOpen = () => {
+    if (!server) return
+    setActiveServer(server.id)
+    setViewMode('server')
+    onClose()
+  }
   // Discover/Browse prefetch rules for every visible card as soon as they
   // load, so this is almost always already cached by the time someone
   // clicks — read it synchronously on first render instead of always
@@ -103,22 +119,31 @@ export function CommunityPreviewModal({ server, onClose, onJoin, joining }: Comm
             </div>
           )}
 
-          <button
-            onClick={() => onJoin(server)}
-            disabled={joining}
-            className={cn(
-              'w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50',
-              server.isPaid ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-pulse-brand hover:bg-pulse-brand-hover text-white'
-            )}
-          >
-            {joining ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : server.isPaid && server.priceAmount != null ? (
-              <><Lock size={14} />Join for {formatPrice(server.priceAmount, server.priceCurrency)}</>
-            ) : (
-              'Join Community'
-            )}
-          </button>
+          {isMember ? (
+            <button
+              onClick={handleOpen}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-pulse-brand hover:bg-pulse-brand-hover text-white"
+            >
+              Open Server <ArrowRight size={14} />
+            </button>
+          ) : (
+            <button
+              onClick={() => onJoin(server)}
+              disabled={joining}
+              className={cn(
+                'w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50',
+                server.isPaid ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-pulse-brand hover:bg-pulse-brand-hover text-white'
+              )}
+            >
+              {joining ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : server.isPaid && server.priceAmount != null ? (
+                <><Lock size={14} />Join for {formatPrice(server.priceAmount, server.priceCurrency)}</>
+              ) : (
+                'Join Community'
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
