@@ -190,7 +190,7 @@ export function DiscoverPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-8 pb-8">
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-8 pb-8 max-w-[1600px] mx-auto w-full">
         {/* Categories */}
         <div className="flex items-center gap-2 mb-6 overflow-x-auto scrollbar-thin pb-1">
           <button
@@ -221,7 +221,7 @@ export function DiscoverPage() {
               <Star size={14} className="text-yellow-400" />
               <span className="text-sm font-semibold text-pulse-text-normal">Featured</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
               {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
             </div>
           </div>
@@ -246,7 +246,7 @@ export function DiscoverPage() {
               <p>No servers found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
               {servers.map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
             </div>
           )}
