@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Check, X } from 'lucide-react'
+import { cropAnimatedGif } from '@/utils/gifCrop'
 
 interface ImageCropModalProps {
   file: File
@@ -72,7 +73,20 @@ export function ImageCropModal({ file, aspect, circular = false, onCancel, onCro
     if (!completedCrop || !imgRef.current) return
     setSaving(true)
     try {
-      const cropped = await cropToFile(imgRef.current, completedCrop, file)
+      let cropped: File
+      if (file.type === 'image/gif') {
+        const image = imgRef.current
+        const scaleX = image.naturalWidth / image.width
+        const scaleY = image.naturalHeight / image.height
+        cropped = await cropAnimatedGif(file, {
+          x: completedCrop.x * scaleX,
+          y: completedCrop.y * scaleY,
+          width: completedCrop.width * scaleX,
+          height: completedCrop.height * scaleY,
+        })
+      } else {
+        cropped = await cropToFile(imgRef.current, completedCrop, file)
+      }
       URL.revokeObjectURL(imageSrc)
       onCropped(cropped)
     } catch {
@@ -122,7 +136,10 @@ export function ImageCropModal({ file, aspect, circular = false, onCancel, onCro
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold bg-pulse-brand hover:bg-pulse-brand-hover text-white transition-colors disabled:opacity-50"
             >
               {saving ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {file.type === 'image/gif' && 'Processing GIF…'}
+                </>
               ) : (
                 <><Check size={14} />Apply</>
               )}

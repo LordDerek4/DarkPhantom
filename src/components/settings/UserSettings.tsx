@@ -87,7 +87,7 @@ const CUSTOM_STATUS_PRESETS = [
 
 export function UserSettings() {
   const { isSettingsOpen, settingsTab, setSettingsOpen, setShowTutorial } = useAppStore()
-  const { user, signOut, updateProfile: updateAuthProfile, uploadAndSetAvatar, uploadAndSetBanner } = useAuth()
+  const { user, signOut, updateProfile: updateAuthProfile, uploadAndSetAvatar, uploadAndSetBanner, removeAvatar, removeBanner } = useAuth()
   const [activeTab, setActiveTab] = useState(settingsTab)
 
   // Profile fields
@@ -141,25 +141,50 @@ export function UserSettings() {
     }
   }, [uploadAndSetBanner])
 
-  // Avatar upload — GIFs skip cropping since rasterizing a frame would kill the animation
+  const [removingAvatar, setRemovingAvatar] = useState(false)
+  const [removingBanner, setRemovingBanner] = useState(false)
+
+  const handleRemoveAvatar = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRemovingAvatar(true)
+    try {
+      await removeAvatar()
+      toast.success('Profile picture removed')
+    } catch {
+      toast.error('Failed to remove profile picture')
+    } finally {
+      setRemovingAvatar(false)
+    }
+  }, [removeAvatar])
+
+  const handleRemoveBanner = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRemovingBanner(true)
+    try {
+      await removeBanner()
+      toast.success('Banner removed')
+    } catch {
+      toast.error('Failed to remove banner')
+    } finally {
+      setRemovingBanner(false)
+    }
+  }, [removeBanner])
+
   const onAvatarDrop = useCallback((files: File[]) => {
     const file = files[0]
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    if (file.type === 'image/gif') { void doAvatarUpload(file); return }
     setCropTarget({ file, kind: 'avatar' })
-  }, [doAvatarUpload])
+  }, [])
 
-  // Banner upload
   const onBannerDrop = useCallback((files: File[]) => {
     const file = files[0]
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    if (file.type === 'image/gif') { void doBannerUpload(file); return }
     setCropTarget({ file, kind: 'banner' })
-  }, [doBannerUpload])
+  }, [])
 
   const { getRootProps: getAvatarRootProps, getInputProps: getAvatarInputProps, isDragActive: isAvatarDrag } = useDropzone({
     onDrop: onAvatarDrop,
@@ -606,12 +631,12 @@ export function UserSettings() {
                     >
                       <input {...getAvatarInputProps()} />
                       <Avatar src={user.avatarUrl} name={user.displayName} size="lg" />
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-medium text-pulse-text-normal">
                           {isAvatarDrag ? 'Drop to upload' : 'Drag & drop or click to upload'}
                         </p>
                         <p className="text-xs text-pulse-text-muted mt-0.5">
-                          PNG, JPG, WEBP — max 8MB
+                          PNG, JPG, WEBP, GIF — max 8MB
                         </p>
                         {uploadProgress > 0 && uploadProgress < 100 && (
                           <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden w-32">
@@ -622,6 +647,16 @@ export function UserSettings() {
                           </div>
                         )}
                       </div>
+                      {user.avatarUrl && (
+                        <button
+                          onClick={handleRemoveAvatar}
+                          disabled={removingAvatar}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors shrink-0"
+                        >
+                          <Trash2 size={12} />
+                          {removingAvatar ? 'Removing…' : 'Remove'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -649,6 +684,15 @@ export function UserSettings() {
                           {isBannerDrag ? 'Drop to upload' : 'Click or drag to change'}
                         </span>
                       </div>
+                      {user.bannerUrl && (
+                        <button
+                          onClick={handleRemoveBanner}
+                          disabled={removingBanner}
+                          className="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-black/50 hover:bg-red-500/80 disabled:opacity-50 text-white transition-colors"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -30,8 +30,6 @@ export function CreateServerModal({ open, onClose }: CreateServerModalProps) {
     if (!file) return
     const error = validateImageFile(file)
     if (error) { toast.error(error); return }
-    // GIFs skip cropping — rasterizing a single frame to canvas would kill the animation
-    if (file.type === 'image/gif') { setIconFile(file); setIconPreview(URL.createObjectURL(file)); return }
     setCropTarget(file)
   }, [])
 

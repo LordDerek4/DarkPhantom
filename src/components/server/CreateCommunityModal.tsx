@@ -182,13 +182,11 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
 
   const [cropTarget, setCropTarget] = useState<{ file: File; kind: 'icon' | 'banner' } | null>(null)
 
-  // GIFs skip cropping — rasterizing a single frame to canvas would kill the animation
   const onIconDrop = useCallback((files: File[]) => {
     const file = files[0]
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    if (file.type === 'image/gif') { update({ iconFile: file, iconPreview: URL.createObjectURL(file) }); return }
     setCropTarget({ file, kind: 'icon' })
   }, [])
 
@@ -197,7 +195,6 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    if (file.type === 'image/gif') { update({ bannerFile: file, bannerPreview: URL.createObjectURL(file) }); return }
     setCropTarget({ file, kind: 'banner' })
   }, [])
 

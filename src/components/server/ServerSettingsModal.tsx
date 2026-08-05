@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUserCache'
 import { updateServer, deleteServer, leaveServer, transferOwnership } from '@/services/server.service'
 import { syncDiscoverListing } from '@/services/discover.service'
-import { uploadServerIcon, uploadServerBanner, validateImageFile } from '@/services/storage.service'
+import { uploadServerIcon, uploadServerBanner, validateImageFile, deleteFile } from '@/services/storage.service'
 import { InviteModal } from '@/components/server/InviteModal'
 import { MonetizationTab } from '@/components/server/MonetizationTab'
 import { Avatar } from '@/components/ui/Avatar'
@@ -39,8 +39,10 @@ export function ServerSettingsModal() {
   const [saving, setSaving] = useState(false)
   const [iconPreview, setIconPreview] = useState<string | null>(null)
   const [iconFile, setIconFile] = useState<File | null>(null)
+  const [iconRemoved, setIconRemoved] = useState(false)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [bannerRemoved, setBannerRemoved] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
@@ -55,8 +57,10 @@ export function ServerSettingsModal() {
       setIsPublic(server.isPublic)
       setIconPreview(server.iconUrl)
       setIconFile(null)
+      setIconRemoved(false)
       setBannerPreview(server.bannerUrl)
       setBannerFile(null)
+      setBannerRemoved(false)
       setDeleteConfirm('')
       setTab('overview')
       setTransferTarget(null)
@@ -86,13 +90,11 @@ export function ServerSettingsModal() {
 
   const [cropTarget, setCropTarget] = useState<{ file: File; kind: 'icon' | 'banner' } | null>(null)
 
-  // GIFs skip cropping — rasterizing a single frame to canvas would kill the animation
   const onIconDrop = useCallback((files: File[]) => {
     const file = files[0]
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    if (file.type === 'image/gif') { setIconFile(file); setIconPreview(URL.createObjectURL(file)); return }
     setCropTarget({ file, kind: 'icon' })
   }, [])
 
@@ -108,7 +110,6 @@ export function ServerSettingsModal() {
     if (!file) return
     const err = validateImageFile(file)
     if (err) { toast.error(err); return }
-    if (file.type === 'image/gif') { setBannerFile(file); setBannerPreview(URL.createObjectURL(file)); return }
     setCropTarget({ file, kind: 'banner' })
   }, [])
 
@@ -123,10 +124,18 @@ export function ServerSettingsModal() {
     if (!server || !isOwner) return
     setSaving(true)
     try {
-      let iconUrl = server.iconUrl
+      let iconUrl: string | null = server.iconUrl
       if (iconFile) iconUrl = await uploadServerIcon(server.id, iconFile)
-      let bannerUrl = server.bannerUrl
+      else if (iconRemoved) {
+        if (server.iconUrl) await deleteFile(server.iconUrl).catch(() => {})
+        iconUrl = null
+      }
+      let bannerUrl: string | null = server.bannerUrl
       if (bannerFile) bannerUrl = await uploadServerBanner(server.id, bannerFile)
+      else if (bannerRemoved) {
+        if (server.bannerUrl) await deleteFile(server.bannerUrl).catch(() => {})
+        bannerUrl = null
+      }
 
       const finalName = name.trim() || server.name
       const finalDescription = description.trim()
@@ -156,7 +165,9 @@ export function ServerSettingsModal() {
 
       toast.success('Server updated!')
       setIconFile(null)
+      setIconRemoved(false)
       setBannerFile(null)
+      setBannerRemoved(false)
     } catch (err) {
       console.error('[ServerSettings] Save failed:', err)
       toast.error('Failed to save changes')
@@ -347,8 +358,16 @@ export function ServerSettingsModal() {
                       <Camera size={16} /> {bannerPreview ? 'Change Banner' : 'Upload Banner'}
                     </div>
                   </div>
+                  {bannerPreview && (
+                    <button
+                      onClick={e => { e.stopPropagation(); setBannerFile(null); setBannerPreview(null); setBannerRemoved(true) }}
+                      className="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-black/50 hover:bg-red-500/80 text-white transition-colors"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
                 </div>
-                <p className="text-xs text-pulse-text-muted mt-1.5">PNG, JPG, WEBP — max 8MB. Recommended: 960×270px</p>
+                <p className="text-xs text-pulse-text-muted mt-1.5">PNG, JPG, WEBP, GIF — max 8MB. Recommended: 960×270px</p>
               </div>
 
               <div className="flex items-center gap-5">
@@ -373,8 +392,16 @@ export function ServerSettingsModal() {
                 </div>
                 <div className="text-sm text-pulse-text-muted space-y-1">
                   <p className="font-medium text-pulse-text-normal">Server Icon</p>
-                  <p>PNG, JPG, WEBP — max 8MB</p>
+                  <p>PNG, JPG, WEBP, GIF — max 8MB</p>
                   <p>Recommended: 512×512px</p>
+                  {iconPreview && (
+                    <button
+                      onClick={() => { setIconFile(null); setIconPreview(null); setIconRemoved(true) }}
+                      className="flex items-center gap-1 text-xs font-medium text-red-400 hover:underline"
+                    >
+                      <Trash2 size={11} /> Remove icon
+                    </button>
+                  )}
                 </div>
               </div>
 

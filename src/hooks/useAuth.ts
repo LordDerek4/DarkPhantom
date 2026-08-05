@@ -10,7 +10,7 @@ import {
   changePassword,
 } from '@/services/auth.service'
 import { updateUserProfile } from '@/services/user.service'
-import { uploadAvatar, uploadUserBanner } from '@/services/storage.service'
+import { uploadAvatar, uploadUserBanner, deleteFile } from '@/services/storage.service'
 
 export function useAuth() {
   const { firebaseUser, currentUser, loading, initialized } = useAuthContext()
@@ -66,6 +66,18 @@ export function useAuth() {
     return url
   }, [currentUser])
 
+  const removeAvatar = useCallback(async () => {
+    if (!currentUser) throw new Error('Not authenticated')
+    if (currentUser.avatarUrl) await deleteFile(currentUser.avatarUrl).catch(() => {})
+    await updateUserProfile(currentUser.uid, { avatarUrl: null })
+  }, [currentUser])
+
+  const removeBanner = useCallback(async () => {
+    if (!currentUser) throw new Error('Not authenticated')
+    if (currentUser.bannerUrl) await deleteFile(currentUser.bannerUrl).catch(() => {})
+    await updateUserProfile(currentUser.uid, { bannerUrl: null })
+  }, [currentUser])
+
   return {
     user: currentUser,
     firebaseUser,
@@ -80,6 +92,8 @@ export function useAuth() {
     updateProfile,
     uploadAndSetAvatar,
     uploadAndSetBanner,
+    removeAvatar,
+    removeBanner,
     changeEmail,
     changePassword,
   }
