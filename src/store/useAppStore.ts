@@ -151,6 +151,9 @@ interface AppActions {
 
   // Tutorial
   setShowTutorial: (show: boolean) => void
+
+  // Auth transitions
+  resetForNewUser: () => void
 }
 
 export const useAppStore = create<AppState & AppActions>()(
@@ -382,6 +385,43 @@ export const useAppStore = create<AppState & AppActions>()(
 
     // Tutorial
     setShowTutorial: show => set({ showTutorial: show }),
+
+    // Auth transitions — the store is a singleton that outlives any one
+    // login session, so switching accounts (or logging out) in the same tab
+    // without a full page reload left the previous account's servers,
+    // channels, DMs, etc. sitting in state until something happened to
+    // overwrite each key individually. Wipe everything user-scoped whenever
+    // the authenticated identity changes.
+    resetForNewUser: () => set({
+      activeServerId: null,
+      activeChannelId: null,
+      activeDMChannelId: null,
+      viewMode: 'home',
+      navHistory: [],
+      navFuture: [],
+      servers: {},
+      channels: {},
+      members: {},
+      roles: {},
+      users: {},
+      messages: {},
+      dmChannels: [],
+      unreadInfo: {},
+      typingUsers: {},
+      contextMenu: { visible: false, x: 0, y: 0, targetType: null, targetId: null },
+      openPanel: null,
+      isCreateCommunityOpen: false,
+      isJoinServerOpen: false,
+      isMobileSidebarOpen: false,
+      isSearchOpen: false,
+      notifications: [],
+      isNotificationsPanelOpen: false,
+      isSettingsOpen: false,
+      settingsTab: 'my-account',
+      serverSettingsId: null,
+      userProfileId: null,
+      presences: {},
+    }),
   }))
 )
 

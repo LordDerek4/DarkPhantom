@@ -4,6 +4,7 @@ import { doc, onSnapshot, getDoc } from 'firebase/firestore'
 import { auth, db, COLLECTIONS } from '@/services/firebase'
 import type { User, UserStatus } from '@/types'
 import { updatePresence } from '@/services/presence.service'
+import { useAppStore } from '@/store/useAppStore'
 
 interface AuthContextValue {
   firebaseUser: FirebaseUser | null
@@ -42,6 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubAuth = onAuthStateChanged(auth, fbUser => {
       // Tear down previous session's listeners before setting up new ones
       cleanup()
+
+      // The app store is a singleton that outlives any single login session —
+      // clear whatever the previous account left behind (servers, channels,
+      // DMs, notifications...) before this account's own subscriptions
+      // (useServer, useDirectMessages, etc.) start populating fresh data.
+      useAppStore.getState().resetForNewUser()
 
       setFirebaseUser(fbUser)
 
