@@ -506,8 +506,7 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
       {cropTarget && (
         <ImageCropModal
           file={cropTarget.file}
-          aspect={cropTarget.kind === 'icon' ? 1 : 3}
-          cropShape={cropTarget.kind === 'icon' ? 'round' : 'rect'}
+          aspect={cropTarget.kind === 'icon' ? 1 : undefined}
           onCancel={() => setCropTarget(null)}
           onCropped={cropped => {
             const kind = cropTarget.kind

@@ -115,7 +115,7 @@ export function CreateServerModal({ open, onClose }: CreateServerModalProps) {
       <ImageCropModal
         file={cropTarget}
         aspect={1}
-        cropShape="round"
+        circular
         onCancel={() => setCropTarget(null)}
         onCropped={cropped => {
           setCropTarget(null)

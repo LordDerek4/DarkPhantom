@@ -1,30 +1,46 @@
-import React, { useCallback, useState } from 'react'
-import Cropper, { type Area } from 'react-easy-crop'
-import { ZoomIn, ZoomOut, Check, X } from 'lucide-react'
+import React, { useRef, useState } from 'react'
+import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
+import { Check, X } from 'lucide-react'
 
 interface ImageCropModalProps {
   file: File
-  aspect: number
-  cropShape?: 'rect' | 'round'
+  /** Locks the crop box to this ratio while still letting it be resized (proportionally). Omit to allow fully free resizing — used for banners. */
+  aspect?: number
+  circular?: boolean
   onCancel: () => void
   onCropped: (file: File) => void
 }
 
-async function getCroppedFile(imageSrc: string, area: Area, sourceFile: File): Promise<File> {
-  const image = new Image()
-  image.src = imageSrc
-  await new Promise((resolve, reject) => {
-    image.onload = resolve
-    image.onerror = reject
-  })
+function initialCrop(mediaWidth: number, mediaHeight: number, aspect?: number): Crop {
+  // No locked aspect (banners) still gets a sensible wide starting box —
+  // it's just freely resizable afterward instead of staying that shape.
+  const startAspect = aspect ?? 3
+  return centerCrop(
+    makeAspectCrop({ unit: '%', width: 90 }, startAspect, mediaWidth, mediaHeight),
+    mediaWidth,
+    mediaHeight
+  )
+}
 
+async function cropToFile(image: HTMLImageElement, crop: PixelCrop, sourceFile: File): Promise<File> {
   const canvas = document.createElement('canvas')
-  canvas.width = area.width
-  canvas.height = area.height
+  const scaleX = image.naturalWidth / image.width
+  const scaleY = image.naturalHeight / image.height
+  const pixelRatio = window.devicePixelRatio || 1
+
+  canvas.width = Math.floor(crop.width * scaleX * pixelRatio)
+  canvas.height = Math.floor(crop.height * scaleY * pixelRatio)
+
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas not supported')
-
-  ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height)
+  ctx.scale(pixelRatio, pixelRatio)
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(
+    image,
+    crop.x * scaleX, crop.y * scaleY, crop.width * scaleX, crop.height * scaleY,
+    0, 0, crop.width * scaleX, crop.height * scaleY
+  )
 
   const outputType = sourceFile.type === 'image/png' ? 'image/png' : 'image/jpeg'
   const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, outputType, 0.92))
@@ -35,27 +51,16 @@ async function getCroppedFile(imageSrc: string, area: Area, sourceFile: File): P
   return new File([blob], `${base}-cropped.${ext}`, { type: outputType })
 }
 
-export function ImageCropModal({ file, aspect, cropShape = 'rect', onCancel, onCropped }: ImageCropModalProps) {
+export function ImageCropModal({ file, aspect, circular = false, onCancel, onCropped }: ImageCropModalProps) {
   const [imageSrc] = useState(() => URL.createObjectURL(file))
-  const [crop, setCrop] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
-  const [croppedArea, setCroppedArea] = useState<Area | null>(null)
+  const [crop, setCrop] = useState<Crop>()
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const [saving, setSaving] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
 
-  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
-    setCroppedArea(croppedAreaPixels)
-  }, [])
-
-  const handleSave = async () => {
-    if (!croppedArea) return
-    setSaving(true)
-    try {
-      const cropped = await getCroppedFile(imageSrc, croppedArea, file)
-      URL.revokeObjectURL(imageSrc)
-      onCropped(cropped)
-    } catch {
-      setSaving(false)
-    }
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget
+    setCrop(initialCrop(width, height, aspect))
   }
 
   const handleCancel = () => {
@@ -63,9 +68,21 @@ export function ImageCropModal({ file, aspect, cropShape = 'rect', onCancel, onC
     onCancel()
   }
 
+  const handleSave = async () => {
+    if (!completedCrop || !imgRef.current) return
+    setSaving(true)
+    try {
+      const cropped = await cropToFile(imgRef.current, completedCrop, file)
+      URL.revokeObjectURL(imageSrc)
+      onCropped(cropped)
+    } catch {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-pulse-bg-secondary rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+      <div className="w-full max-w-lg bg-pulse-bg-secondary rounded-2xl overflow-hidden shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <p className="text-sm font-semibold text-pulse-text-normal">Adjust image</p>
           <button onClick={handleCancel} className="p-1 rounded hover:bg-white/10 text-pulse-text-muted hover:text-white transition-colors">
@@ -73,35 +90,25 @@ export function ImageCropModal({ file, aspect, cropShape = 'rect', onCancel, onC
           </button>
         </div>
 
-        <div className="relative h-72 bg-black">
-          <Cropper
-            image={imageSrc}
+        <div className="p-4 bg-black/80 flex items-center justify-center max-h-[60vh] overflow-auto">
+          <ReactCrop
             crop={crop}
-            zoom={zoom}
+            onChange={(_, percentCrop) => setCrop(percentCrop)}
+            onComplete={c => setCompletedCrop(c)}
             aspect={aspect}
-            cropShape={cropShape}
-            showGrid={cropShape === 'rect'}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-          />
+            circularCrop={circular}
+            minWidth={40}
+            minHeight={40}
+          >
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <img ref={imgRef} src={imageSrc} onLoad={onImageLoad} style={{ maxHeight: '55vh' }} />
+          </ReactCrop>
         </div>
 
-        <div className="p-4 space-y-4">
-          <div className="flex items-center gap-3">
-            <ZoomOut size={16} className="text-pulse-text-muted shrink-0" />
-            <input
-              type="range"
-              min={1}
-              max={3}
-              step={0.01}
-              value={zoom}
-              onChange={e => setZoom(Number(e.target.value))}
-              className="flex-1 accent-pulse-brand"
-            />
-            <ZoomIn size={16} className="text-pulse-text-muted shrink-0" />
-          </div>
-
+        <div className="p-4 space-y-3">
+          <p className="text-xs text-pulse-text-muted text-center">
+            Drag the handles to resize{aspect ? '' : ' — free-form, any shape'}, drag inside to reposition
+          </p>
           <div className="flex gap-2">
             <button
               onClick={handleCancel}
@@ -111,7 +118,7 @@ export function ImageCropModal({ file, aspect, cropShape = 'rect', onCancel, onC
             </button>
             <button
               onClick={handleSave}
-              disabled={saving || !croppedArea}
+              disabled={saving || !completedCrop}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold bg-pulse-brand hover:bg-pulse-brand-hover text-white transition-colors disabled:opacity-50"
             >
               {saving ? (

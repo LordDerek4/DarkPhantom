@@ -1056,8 +1056,8 @@ export function UserSettings() {
       {cropTarget && (
         <ImageCropModal
           file={cropTarget.file}
-          aspect={cropTarget.kind === 'avatar' ? 1 : 3}
-          cropShape={cropTarget.kind === 'avatar' ? 'round' : 'rect'}
+          aspect={cropTarget.kind === 'avatar' ? 1 : undefined}
+          circular={cropTarget.kind === 'avatar'}
           onCancel={() => setCropTarget(null)}
           onCropped={cropped => {
             const kind = cropTarget.kind
