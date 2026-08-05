@@ -115,7 +115,7 @@ export function HomeScreen() {
             </div>
             {serverList.length > 6 && (
               <button
-                onClick={() => setViewMode('server')}
+                onClick={() => setViewMode('discover')}
                 className="mt-2 text-xs text-pulse-brand hover:underline"
               >
                 View all {serverList.length} communities →
