@@ -30,23 +30,35 @@ export async function computeServerAnalytics(serverId: string): Promise<ServerAn
   today.setHours(0, 0, 0, 0)
   const todayTs = Timestamp.fromDate(today)
 
-  // Count messages today
-  const msgQuery = query(
-    collection(db, 'messages'),
-    where('serverId', '==', serverId),
-    where('createdAt', '>=', todayTs)
-  )
-  const msgSnap = await getDocs(msgQuery)
-  const messages = msgSnap.docs.map(d => d.data())
+  // Count messages today. Isolated in its own try/catch so a transient
+  // failure or a Firestore index that's still building doesn't also take
+  // down the (independent) new-members query below.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let messages: Record<string, any>[] = []
+  try {
+    const msgSnap = await getDocs(query(
+      collection(db, 'messages'),
+      where('serverId', '==', serverId),
+      where('createdAt', '>=', todayTs)
+    ))
+    messages = msgSnap.docs.map(d => d.data())
+  } catch {
+    // leave messages empty — everything derived from it below just reads as zero
+  }
   const authorIds = [...new Set(messages.map(m => m.authorId as string))]
 
   // New members who joined today
-  const newMemberSnap = await getDocs(query(
-    collection(db, 'serverMembers'),
-    where('serverId', '==', serverId),
-    where('joinedAt', '>=', todayTs)
-  ))
-  const newMembers = newMemberSnap.size
+  let newMembers = 0
+  try {
+    const newMemberSnap = await getDocs(query(
+      collection(db, 'serverMembers'),
+      where('serverId', '==', serverId),
+      where('joinedAt', '>=', todayTs)
+    ))
+    newMembers = newMemberSnap.size
+  } catch {
+    // leave at 0
+  }
 
   // Channel breakdown
   const channelBreakdown: Record<string, number> = {}
@@ -125,18 +137,27 @@ export async function computeCommunityHealth(serverId: string): Promise<Communit
     ? Math.min(100, ((analytics[analytics.length - 1].dau - analytics[0].dau) / (analytics[0].dau || 1)) * 100 + 50)
     : 50
 
-  const { ts: sevenDaysAgoTs } = dateIdDaysAgo(7)
-  const modLogSnap = await getDocs(query(
-    collection(db, 'moderationLogs'),
-    where('serverId', '==', serverId),
-    where('createdAt', '>=', sevenDaysAgoTs)
-  ))
-  const modActions = modLogSnap.docs.map(d => d.data().action as string)
+  // Isolated in its own try/catch so a transient failure or a still-building
+  // index here doesn't also take out participation/growth/retention above,
+  // which don't depend on it.
+  let moderationScore = 70
+  let toxicityScore = 70
+  try {
+    const { ts: sevenDaysAgoTs } = dateIdDaysAgo(7)
+    const modLogSnap = await getDocs(query(
+      collection(db, 'moderationLogs'),
+      where('serverId', '==', serverId),
+      where('createdAt', '>=', sevenDaysAgoTs)
+    ))
+    const modActions = modLogSnap.docs.map(d => d.data().action as string)
 
-  const moderationScore = Math.max(0, Math.min(100, 100 - (modActions.length / Math.max(avgDAU, 1)) * 50))
+    moderationScore = Math.max(0, Math.min(100, 100 - (modActions.length / Math.max(avgDAU, 1)) * 50))
 
-  const weightedIncidents = modActions.reduce((s, action) => s + (INCIDENT_SEVERITY[action] ?? 0), 0)
-  const toxicityScore = Math.max(0, Math.min(100, 100 - (weightedIncidents / Math.max(totalMessages7d, 1)) * 1000))
+    const weightedIncidents = modActions.reduce((s, action) => s + (INCIDENT_SEVERITY[action] ?? 0), 0)
+    toxicityScore = Math.max(0, Math.min(100, 100 - (weightedIncidents / Math.max(totalMessages7d, 1)) * 1000))
+  } catch {
+    // leave at the neutral fallback above
+  }
 
   const retentionScore = analytics.length > 0 ? analytics[analytics.length - 1].retention7d : 0
 
