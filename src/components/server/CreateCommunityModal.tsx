@@ -127,7 +127,7 @@ const ACCENT_COLORS = [
   '#1abc9c', '#e74c3c', '#3498db', '#f39c12',
 ]
 
-type Privacy = 'public' | 'private' | 'invite'
+type Privacy = 'public' | 'private'
 type Step = 'template' | 'identity' | 'features' | 'rules' | 'done'
 type ModalMode = 'create' | 'browse'
 const STEPS: Step[] = ['template', 'identity', 'features', 'rules', 'done']
@@ -650,8 +650,7 @@ function IdentityStep({
           <div className="space-y-1">
             {([
               { id: 'public', icon: Globe, label: 'Public', desc: 'Anyone can join' },
-              { id: 'invite', icon: Link, label: 'Invite Only', desc: 'Invite link required' },
-              { id: 'private', icon: Lock, label: 'Private', desc: 'Approval required' },
+              { id: 'private', icon: Lock, label: 'Private', desc: 'Invite link required' },
             ] as const).map(opt => (
               <button
                 key={opt.id}
@@ -886,7 +885,7 @@ function RulesStep({
             <strong className="text-pulse-text-normal">Community overview</strong>
             <div className="mt-1 space-y-0.5">
               <div>📛 {form.name || 'Unnamed Community'}</div>
-              <div>🔒 {form.privacy === 'public' ? 'Public' : form.privacy === 'invite' ? 'Invite Only' : 'Private'}</div>
+              <div>🔒 {form.privacy === 'public' ? 'Public' : 'Private'}</div>
               <div>📺 {form.channels.length} channels</div>
               <div>✨ {form.features.length} features enabled</div>
               <div>📋 {form.rules.length} rules</div>
