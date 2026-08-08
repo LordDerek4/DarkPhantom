@@ -1,19 +1,16 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import { Search, Users, Plus, X, Check, MessageSquare, UserPlus } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Search, X, UserPlus } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useAppStore } from '@/store/useAppStore'
 import { searchUsers } from '@/services/user.service'
 import { getUserById } from '@/services/auth.service'
 import { getFriends, getFriendUserId } from '@/services/friends.service'
-import { createGroupDMChannel } from '@/services/dm.service'
 import { useDMChannels } from '@/hooks/useDirectMessages'
 import { Avatar } from '@/components/ui/Avatar'
-import { cn, debounce } from '@/utils/helpers'
+import { debounce } from '@/utils/helpers'
 import type { User } from '@/types'
 import toast from 'react-hot-toast'
-
-type Mode = 'dm' | 'group'
 
 interface Props {
   open: boolean
@@ -25,13 +22,10 @@ export function NewConversationModal({ open, onClose }: Props) {
   const { setActiveDMChannel, setViewMode } = useAppStore()
   const { openDM } = useDMChannels()
 
-  const [mode, setMode] = useState<Mode>('dm')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<User[]>([])
   const [friends, setFriends] = useState<User[]>([])
   const [searching, setSearching] = useState(false)
-  const [selected, setSelected] = useState<User[]>([])
-  const [groupName, setGroupName] = useState('')
   const [creating, setCreating] = useState(false)
 
   // Load friends list
@@ -65,16 +59,6 @@ export function NewConversationModal({ open, onClose }: Props) {
 
   const displayList: User[] = query ? results : friends
 
-  const toggleSelect = (u: User) => {
-    setSelected(prev =>
-      prev.find(s => s.uid === u.uid)
-        ? prev.filter(s => s.uid !== u.uid)
-        : [...prev, u]
-    )
-  }
-
-  const isSelected = (uid: string) => selected.some(s => s.uid === uid)
-
   const handleOpenDM = async (targetUser: User) => {
     if (!user) return
     setCreating(true)
@@ -90,29 +74,9 @@ export function NewConversationModal({ open, onClose }: Props) {
     }
   }
 
-  const handleCreateGroup = async () => {
-    if (!user || selected.length < 2) return
-    setCreating(true)
-    try {
-      const name = groupName.trim() || selected.map(u => u.displayName.split(' ')[0]).join(', ')
-      const channel = await createGroupDMChannel(user.uid, selected.map(u => u.uid), name)
-      setActiveDMChannel(channel.id)
-      setViewMode('dm')
-      toast.success(`Group "${name}" created!`)
-      handleClose()
-    } catch {
-      toast.error('Failed to create group')
-    } finally {
-      setCreating(false)
-    }
-  }
-
   const handleClose = () => {
-    setMode('dm')
     setQuery('')
     setResults([])
-    setSelected([])
-    setGroupName('')
     onClose()
   }
 
@@ -137,26 +101,7 @@ export function NewConversationModal({ open, onClose }: Props) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <div className="flex items-center gap-1 bg-pulse-bg-primary rounded-xl p-1">
-            <button
-              onClick={() => { setMode('dm'); setSelected([]) }}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all',
-                mode === 'dm' ? 'bg-pulse-brand text-white' : 'text-pulse-text-muted hover:text-pulse-text-normal'
-              )}
-            >
-              <MessageSquare size={13} /> New DM
-            </button>
-            <button
-              onClick={() => setMode('group')}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all',
-                mode === 'group' ? 'bg-pulse-brand text-white' : 'text-pulse-text-muted hover:text-pulse-text-normal'
-              )}
-            >
-              <Users size={13} /> Group Chat
-            </button>
-          </div>
+          <p className="text-sm font-semibold text-pulse-text-normal">New Message</p>
           <button
             onClick={handleClose}
             className="p-1.5 rounded-lg text-pulse-text-muted hover:text-white hover:bg-white/10 transition-colors"
@@ -166,38 +111,13 @@ export function NewConversationModal({ open, onClose }: Props) {
         </div>
 
         <div className="p-4 space-y-3">
-          {/* Group name field */}
-          {mode === 'group' && (
-            <input
-              value={groupName}
-              onChange={e => setGroupName(e.target.value)}
-              placeholder="Group name (optional)"
-              className="w-full bg-pulse-bg-primary border border-white/10 rounded-xl px-3 py-2.5 text-sm text-pulse-text-normal placeholder:text-pulse-text-muted focus:border-pulse-brand/50 focus:outline-none"
-            />
-          )}
-
-          {/* Selected chips for group */}
-          {mode === 'group' && selected.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {selected.map(u => (
-                <div key={u.uid} className="flex items-center gap-1.5 pl-1 pr-2 py-1 bg-pulse-brand/20 border border-pulse-brand/30 rounded-full text-xs text-pulse-brand font-medium">
-                  <Avatar src={u.avatarUrl} name={u.displayName} size="xs" />
-                  {u.displayName.split(' ')[0]}
-                  <button onClick={() => toggleSelect(u)} className="ml-0.5 hover:text-white transition-colors">
-                    <X size={11} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Search */}
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-pulse-text-muted" />
             <input
               value={query}
               onChange={e => handleQueryChange(e.target.value)}
-              placeholder={mode === 'dm' ? 'Search users or friends...' : 'Add people...'}
+              placeholder="Search users or friends..."
               autoFocus
               className="w-full bg-pulse-bg-primary border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-sm text-pulse-text-normal placeholder:text-pulse-text-muted focus:border-pulse-brand/50 focus:outline-none"
             />
@@ -217,34 +137,20 @@ export function NewConversationModal({ open, onClose }: Props) {
               </div>
             )}
 
-            {!searching && displayList.map(u => {
-              const sel = isSelected(u.uid)
-              return (
-                <button
-                  key={u.uid}
-                  onClick={() => mode === 'dm' ? handleOpenDM(u) : toggleSelect(u)}
-                  disabled={creating}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors',
-                    sel ? 'bg-pulse-brand/10 border border-pulse-brand/20' : 'hover:bg-white/5'
-                  )}
-                >
-                  <Avatar src={u.avatarUrl} name={u.displayName} userId={u.uid} size="sm" showStatus />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-pulse-text-normal truncate">{u.displayName}</p>
-                    <p className="text-xs text-pulse-text-muted">@{u.username}</p>
-                  </div>
-                  {mode === 'group' && (
-                    <div className={cn(
-                      'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
-                      sel ? 'bg-pulse-brand border-pulse-brand' : 'border-white/20'
-                    )}>
-                      {sel && <Check size={10} className="text-white" />}
-                    </div>
-                  )}
-                </button>
-              )
-            })}
+            {!searching && displayList.map(u => (
+              <button
+                key={u.uid}
+                onClick={() => handleOpenDM(u)}
+                disabled={creating}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors hover:bg-white/5 disabled:opacity-50"
+              >
+                <Avatar src={u.avatarUrl} name={u.displayName} userId={u.uid} size="sm" showStatus />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-pulse-text-normal truncate">{u.displayName}</p>
+                  <p className="text-xs text-pulse-text-muted">@{u.username}</p>
+                </div>
+              </button>
+            ))}
 
             {!searching && query && displayList.length === 0 && (
               <div className="text-center py-6 text-pulse-text-muted text-sm">
@@ -260,22 +166,6 @@ export function NewConversationModal({ open, onClose }: Props) {
               </div>
             )}
           </div>
-
-          {/* Group create button */}
-          {mode === 'group' && (
-            <button
-              onClick={handleCreateGroup}
-              disabled={selected.length < 2 || creating}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-pulse-brand hover:bg-pulse-brand-hover disabled:opacity-40 text-white font-semibold rounded-xl transition-colors text-sm"
-            >
-              {creating ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Plus size={16} />
-              )}
-              {creating ? 'Creating...' : `Create Group${selected.length >= 2 ? ` (${selected.length + 1})` : ''}`}
-            </button>
-          )}
         </div>
       </motion.div>
     </div>

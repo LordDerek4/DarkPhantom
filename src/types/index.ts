@@ -214,10 +214,6 @@ export interface ReactionData {
 export interface DirectMessageChannel {
   id: string
   participantIds: string[]
-  isGroup: boolean
-  name: string | null
-  iconUrl: string | null
-  ownerId: string | null
   lastMessageId: string | null
   lastMessageAt: Timestamp | null
   lastMessageContent: string | null

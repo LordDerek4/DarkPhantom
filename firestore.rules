@@ -166,14 +166,7 @@ service cloud.firestore {
         (resource == null || request.auth.uid in resource.data.participantIds);
       allow create: if isAuth() &&
         request.auth.uid in request.resource.data.participantIds &&
-        (
-          // 1-to-1 DM: exactly 2 participants
-          (request.resource.data.isGroup == false && request.resource.data.participantIds.size() == 2) ||
-          // Group DM: creator is owner, at least 3 participants
-          (request.resource.data.isGroup == true &&
-           request.resource.data.ownerId == request.auth.uid &&
-           request.resource.data.participantIds.size() >= 3)
-        );
+        request.resource.data.participantIds.size() == 2;
       allow update: if isAuth() &&
         request.auth.uid in resource.data.participantIds;
       allow delete: if isAuth() &&

@@ -12,13 +12,11 @@ import {
   limit,
   startAfter,
   serverTimestamp,
-  arrayUnion,
   setDoc,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { db, COLLECTIONS } from './firebase'
 import type { DirectMessageChannel, DirectMessage, Attachment } from '@/types'
-import { generateId } from '@/utils/helpers'
 
 const PAGE_SIZE = 50
 
@@ -41,10 +39,6 @@ export async function getOrCreateDMChannel(
 
   const channelData = {
     participantIds: sortedIds,
-    isGroup: false,
-    name: null,
-    iconUrl: null,
-    ownerId: null,
     lastMessageId: null,
     lastMessageAt: null,
     lastMessageContent: null,
@@ -54,52 +48,6 @@ export async function getOrCreateDMChannel(
 
   await setDoc(ref, channelData)
   return { id: channelId, ...channelData } as DirectMessageChannel
-}
-
-export async function createGroupDMChannel(
-  creatorId: string,
-  participantIds: string[],
-  name: string
-): Promise<DirectMessageChannel> {
-  const allIds = Array.from(new Set([creatorId, ...participantIds]))
-  const unreadCounts: Record<string, number> = {}
-  allIds.forEach(id => { unreadCounts[id] = 0 })
-
-  const channelData = {
-    participantIds: allIds,
-    isGroup: true,
-    name: name.trim() || null,
-    iconUrl: null,
-    ownerId: creatorId,
-    lastMessageId: null,
-    lastMessageAt: null,
-    lastMessageContent: null,
-    createdAt: serverTimestamp(),
-    unreadCounts,
-  }
-
-  const ref = await addDoc(collection(db, COLLECTIONS.DIRECT_MESSAGE_CHANNELS), channelData)
-  return { id: ref.id, ...channelData } as DirectMessageChannel
-}
-
-export async function updateGroupDMChannel(
-  channelId: string,
-  updates: { name?: string; iconUrl?: string }
-): Promise<void> {
-  await updateDoc(doc(db, COLLECTIONS.DIRECT_MESSAGE_CHANNELS, channelId), updates)
-}
-
-export async function leaveGroupDM(channelId: string, userId: string): Promise<void> {
-  const ref = doc(db, COLLECTIONS.DIRECT_MESSAGE_CHANNELS, channelId)
-  const snap = await getDoc(ref)
-  if (!snap.exists()) return
-  const data = snap.data() as DirectMessageChannel
-  const newParticipants = data.participantIds.filter(id => id !== userId)
-  const { [userId]: _, ...newUnread } = data.unreadCounts
-  await updateDoc(ref, {
-    participantIds: newParticipants,
-    unreadCounts: newUnread,
-  })
 }
 
 export async function getUserDMChannels(userId: string): Promise<DirectMessageChannel[]> {

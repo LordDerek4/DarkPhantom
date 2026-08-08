@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Hash, Megaphone, Plus, Search, X, Users } from 'lucide-react'
+import { ChevronDown, ChevronRight, Hash, Megaphone, Plus, Search, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
@@ -177,7 +177,6 @@ function DMSidebarContent() {
     if (!search.trim()) return dmChannels
     const q = search.toLowerCase()
     return dmChannels.filter(ch => {
-      if (ch.isGroup && ch.name) return ch.name.toLowerCase().includes(q)
       const otherId = ch.participantIds.find(id => id !== user?.uid) ?? ''
       return otherId.includes(q)
     })
@@ -232,9 +231,7 @@ function DMSidebarContent() {
           </div>
         ) : (
           filtered.map(channel => {
-            const otherId = channel.isGroup
-              ? null
-              : (channel.participantIds.find(id => id !== user?.uid) ?? null)
+            const otherId = channel.participantIds.find(id => id !== user?.uid) ?? null
             const unreadCount = user ? (channel.unreadCounts[user.uid] ?? 0) : 0
 
             return (
@@ -275,11 +272,8 @@ function DMChannelItem({
   const dmUser = useUser(userId)
   const { setActiveDMChannel } = useAppStore()
 
-  const displayName = channel.isGroup
-    ? (channel.name ?? `Group (${channel.participantIds.length})`)
-    : (dmUser?.displayName ?? 'Loading...')
-
-  const avatarSrc = channel.isGroup ? channel.iconUrl : (dmUser?.avatarUrl ?? null)
+  const displayName = dmUser?.displayName ?? 'Loading...'
+  const avatarSrc = dmUser?.avatarUrl ?? null
   const avatarName = displayName
 
   return (
@@ -292,22 +286,13 @@ function DMChannelItem({
         )}
       >
         <div className="relative shrink-0">
-          {channel.isGroup ? (
-            <div className="w-8 h-8 rounded-full bg-pulse-brand/20 border border-pulse-brand/30 flex items-center justify-center">
-              {channel.iconUrl
-                ? <img src={channel.iconUrl} alt="" className="w-full h-full rounded-full object-cover" />
-                : <Users size={14} className="text-pulse-brand" />
-              }
-            </div>
-          ) : (
-            <Avatar
-              src={avatarSrc}
-              name={avatarName}
-              userId={userId ?? undefined}
-              size="sm"
-              showStatus
-            />
-          )}
+          <Avatar
+            src={avatarSrc}
+            name={avatarName}
+            userId={userId ?? undefined}
+            size="sm"
+            showStatus
+          />
         </div>
         <div className="flex-1 min-w-0">
           <p className={cn(
