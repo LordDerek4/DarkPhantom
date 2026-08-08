@@ -30,7 +30,13 @@ export function useDMChannels() {
     )
 
     const unsub = onSnapshot(q, snap => {
-      const channels = snap.docs.map(d => ({ id: d.id, ...d.data() }) as DirectMessageChannel)
+      const channels = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }) as DirectMessageChannel)
+        // DMs are strictly 1:1 — filters out any leftover group-DM docs from
+        // before that feature was removed, which would otherwise render as a
+        // confusing extra "conversation" with an arbitrary one of their
+        // former participants.
+        .filter(ch => ch.participantIds.length === 2)
       setDMChannels(channels)
       setLoading(false)
     })

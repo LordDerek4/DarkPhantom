@@ -170,8 +170,7 @@ service cloud.firestore {
       allow update: if isAuth() &&
         request.auth.uid in resource.data.participantIds;
       allow delete: if isAuth() &&
-        resource.data.isGroup == true &&
-        resource.data.ownerId == request.auth.uid;
+        request.auth.uid in resource.data.participantIds;
     }
 
     match /directMessages/{messageId} {

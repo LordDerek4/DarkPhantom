@@ -147,3 +147,17 @@ export async function markDMRead(dmChannelId: string, userId: string): Promise<v
     [`unreadCounts.${userId}`]: 0,
   })
 }
+
+export async function deleteDMChannel(dmChannelId: string, currentUserId: string): Promise<void> {
+  // The message delete rule only allows deleting your own messages, so this
+  // is a best-effort cleanup — the channel doc removal below is what
+  // actually removes the conversation from both participants' DM lists.
+  const msgSnap = await getDocs(query(
+    collection(db, COLLECTIONS.DIRECT_MESSAGES),
+    where('dmChannelId', '==', dmChannelId)
+  ))
+  const ownMessages = msgSnap.docs.filter(d => d.data().authorId === currentUserId)
+  await Promise.all(ownMessages.map(d => deleteDoc(d.ref)))
+
+  await deleteDoc(doc(db, COLLECTIONS.DIRECT_MESSAGE_CHANNELS, dmChannelId))
+}

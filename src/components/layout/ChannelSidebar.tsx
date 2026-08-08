@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Hash, Megaphone, Plus, Search, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Hash, Megaphone, Plus, Search, Trash2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/utils/helpers'
 import { useAppStore } from '@/store/useAppStore'
 import { useServerDetails } from '@/hooks/useServer'
 import { useDMChannels } from '@/hooks/useDirectMessages'
+import { deleteDMChannel } from '@/services/dm.service'
+import toast from 'react-hot-toast'
 import { useAuth } from '@/hooks/useAuth'
 import { useUser } from '@/hooks/useUserCache'
 import { Avatar } from '@/components/ui/Avatar'
@@ -271,6 +273,20 @@ function DMChannelItem({
 }) {
   const dmUser = useUser(userId)
   const { setActiveDMChannel } = useAppStore()
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm(`Delete this conversation${dmUser?.displayName ? ` with ${dmUser.displayName}` : ''}? This can't be undone.`)) return
+    setDeleting(true)
+    try {
+      await deleteDMChannel(channel.id, currentUserId)
+      if (isActive) setActiveDMChannel(null)
+    } catch {
+      toast.error('Failed to delete conversation')
+      setDeleting(false)
+    }
+  }
 
   const displayName = dmUser?.displayName ?? 'Loading...'
   const avatarSrc = dmUser?.avatarUrl ?? null
@@ -308,16 +324,14 @@ function DMChannelItem({
         {unreadCount > 0 && <Badge count={unreadCount} />}
       </button>
 
-      {/* Close button on hover */}
+      {/* Delete button on hover */}
       <button
-        onClick={e => {
-          e.stopPropagation()
-          if (isActive) setActiveDMChannel(null)
-        }}
-        className="opacity-0 group-hover:opacity-100 mr-1 p-1 rounded text-pulse-text-muted hover:text-pulse-text-normal hover:bg-white/10 transition-all shrink-0"
-        title="Close"
+        onClick={handleDelete}
+        disabled={deleting}
+        className="opacity-0 group-hover:opacity-100 mr-1 p-1 rounded text-pulse-text-muted hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0 disabled:opacity-50"
+        title="Delete conversation"
       >
-        <X size={12} />
+        <Trash2 size={12} />
       </button>
     </div>
   )
