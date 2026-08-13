@@ -2,15 +2,30 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <!-- SVG first for browsers that support it, PNGs after as the reliable
+         fallback — Google Search's favicon crawler and iOS both require a
+         raster format; apple-touch-icon in particular silently ignores SVG. -->
     <link rel="icon" type="image/svg+xml" href="/pulse-icon.svg" />
-    <link rel="apple-touch-icon" href="/pulse-icon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/favicon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="AevixChat — Real-time communities, messaging, and group chat for everyone." />
     <meta name="theme-color" content="#f5372e" />
     <meta property="og:title" content="AevixChat" />
     <meta property="og:description" content="Real-time communities, messaging, and group chat for everyone." />
-    <meta property="og:image" content="/pulse-icon.svg" />
+    <meta property="og:image" content="https://www.aevixchat.com/favicon-512.png" />
     <title>AevixChat</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "AevixChat",
+        "url": "https://www.aevixchat.com",
+        "logo": "https://www.aevixchat.com/favicon-512.png"
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
