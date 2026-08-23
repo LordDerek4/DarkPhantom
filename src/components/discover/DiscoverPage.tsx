@@ -11,7 +11,7 @@ import { CommunityPreviewModal } from './CommunityPreviewModal'
 import type { ServerListing } from '@/types/extended'
 import toast from 'react-hot-toast'
 
-function ServerCard({ server, onPreview, joining }: { server: ServerListing; onPreview: (server: ServerListing) => void; joining: boolean }) {
+function ServerCard({ server, onPreview, joining, isMember }: { server: ServerListing; onPreview: (server: ServerListing) => void; joining: boolean; isMember: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -61,11 +61,15 @@ function ServerCard({ server, onPreview, joining }: { server: ServerListing; onP
               <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
               <span>{server.onlineCount.toLocaleString()}</span>
             </div>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              <Users size={10} />
-              <span>{server.memberCount.toLocaleString()}</span>
-            </div>
+            {isMember && (
+              <>
+                <span>•</span>
+                <div className="flex items-center gap-1">
+                  <Users size={10} />
+                  <span>{server.memberCount.toLocaleString()}</span>
+                </div>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-1.5">
             {server.isPaid && server.priceAmount != null && (
@@ -85,7 +89,7 @@ function ServerCard({ server, onPreview, joining }: { server: ServerListing; onP
 
 export function DiscoverPage() {
   const { user } = useAuth()
-  const { setActiveServer, setViewMode } = useAppStore()
+  const { setActiveServer, setViewMode, servers: myServers } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [servers, setServers] = useState<ServerListing[]>([])
@@ -222,7 +226,7 @@ export function DiscoverPage() {
               <span className="text-sm font-semibold text-pulse-text-normal">Featured</span>
             </div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-              {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
+              {featured.slice(0, 4).map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} isMember={s.id in myServers} />)}
             </div>
           </div>
         )}
@@ -247,7 +251,7 @@ export function DiscoverPage() {
             </div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-              {servers.map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} />)}
+              {servers.map(s => <ServerCard key={s.id} server={s} onPreview={setPreviewServer} joining={joiningId === s.id} isMember={s.id in myServers} />)}
             </div>
           )}
         </div>

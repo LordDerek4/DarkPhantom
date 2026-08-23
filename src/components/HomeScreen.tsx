@@ -169,7 +169,9 @@ export function HomeScreen() {
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {trending.map((server, i) => (
+              {trending.map((server, i) => {
+                const isMember = server.id in servers
+                return (
                 <motion.div
                   key={server.id}
                   initial={{ opacity: 0, y: 6 }}
@@ -191,13 +193,16 @@ export function HomeScreen() {
                     }
                     <div className="min-w-0 flex-1 pb-0.5">
                       <p className="text-sm font-semibold text-pulse-text-normal truncate">{server.name}</p>
-                      <p className="text-[11px] text-pulse-text-muted flex items-center gap-1">
-                        <Users size={9} />{server.memberCount.toLocaleString()} members
-                      </p>
+                      {isMember && (
+                        <p className="text-[11px] text-pulse-text-muted flex items-center gap-1">
+                          <Users size={9} />{server.memberCount.toLocaleString()} members
+                        </p>
+                      )}
                     </div>
                   </div>
                 </motion.div>
-              ))}
+                )
+              })}
             </div>
           </motion.section>
         )}

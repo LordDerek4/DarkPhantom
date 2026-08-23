@@ -94,7 +94,9 @@ export function CommunityPreviewModal({ server, onClose, onJoin, joining }: Comm
           </div>
 
           <div className="flex items-center gap-3 text-xs text-pulse-text-muted mb-4">
-            <span className="flex items-center gap-1"><Users size={11} />{server.memberCount.toLocaleString()} members</span>
+            {isMember && (
+              <span className="flex items-center gap-1"><Users size={11} />{server.memberCount.toLocaleString()} members</span>
+            )}
             <span className="px-2 py-0.5 rounded-full bg-pulse-bg-primary">{server.category}</span>
           </div>
 

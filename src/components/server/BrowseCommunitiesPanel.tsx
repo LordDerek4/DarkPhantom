@@ -144,9 +144,11 @@ export function BrowseCommunitiesPanel({ onJoined }: { onJoined: (serverId: stri
                   )}
 
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-[11px] text-pulse-text-muted flex items-center gap-1">
-                      <Users size={10} />{server.memberCount.toLocaleString()} members
-                    </span>
+                    {isMember ? (
+                      <span className="text-[11px] text-pulse-text-muted flex items-center gap-1">
+                        <Users size={10} />{server.memberCount.toLocaleString()} members
+                      </span>
+                    ) : <span />}
                     <button
                       onClick={e => {
                         e.stopPropagation()
